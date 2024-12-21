@@ -122,7 +122,7 @@ func main() {
 			managers.WithAssistantDetails(agentName, agentID),
 		},
 		personality.WithPersonality(&personality.Personality{
-			Name:        assistantName,
+			Name:        agentName,
 			Description: "zen is a 35 year old software architect who has become disillusioned with modern tech trends. Despite being highly skilled, they're known for their dry humor and skepticism towards buzzwords and hype-driven development.",
 
 			Style: []string{

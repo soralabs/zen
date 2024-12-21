@@ -1,4 +1,4 @@
-# Zen - Extensible Conversation Engine
+# Zen - An Advanced Conversational LLM Framework
 
 ## Overview
 Zen is a highly modular conversation engine built in Go that emphasizes pluggable architecture and platform independence. It provides a flexible foundation for building conversational systems through:
@@ -54,40 +54,19 @@ type Provider interface {
 }
 ```
 
-2. **Custom Managers**: Create new behaviors by implementing the Manager interface
+2. **Managers**: Create new behaviors by implementing the Manager interface
 ```go
 type Manager interface {
-	// GetID returns the unique identifier for this manager
-	GetID() ManagerID
-
-	// GetDependencies returns a list of other manager IDs that this manager depends on
-	GetDependencies() []ManagerID
-
-	// Process performs analysis on the current state
-	// This is called explicitly by the agent during message processing
-	Process(state *state.State) error
-
-	// PostProcess performs actions based on the current state
-	// This is called explicitly by the agent after response generation
-	PostProcess(state *state.State) error
-
-	// ProvideContext collects and returns manager-specific data for the current state
-	Context(state *state.State) ([]state.StateData, error)
-
-	// StoreFragment persists a message fragment to storage
-	Store(fragment *db.Fragment) error
-
-	// StartBackgroundProcesses initializes any background tasks
-	StartBackgroundProcesses()
-
-	// StopBackgroundProcesses cleanly shuts down any background tasks
-	StopBackgroundProcesses()
-
-	// RegisterEventHandler sets up a callback for handling manager events
-	RegisterEventHandler(callback EventCallbackFunc)
-
-	// triggerEvent sends an event to the registered handler
-	triggerEvent(eventData EventData)
+    GetID() ManagerID
+    GetDependencies() []ManagerID
+    Process(state *state.State) error
+    PostProcess(state *state.State) error
+    Context(state *state.State) ([]state.StateData, error)
+    Store(fragment *db.Fragment) error
+    StartBackgroundProcesses()
+    StopBackgroundProcesses()
+    RegisterEventHandler(callback EventCallbackFunc)
+    triggerEvent(eventData EventData)
 }
 ```
 
