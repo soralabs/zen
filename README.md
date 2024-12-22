@@ -78,10 +78,22 @@ type Manager interface {
 
 ## Quick Start
 1. Clone the repository
+```bash 
+git clone https://github.com/soralabs/zen
+```   
 2. Copy `.env.example` to `.env` and configure your environment variables
-3. Install dependencies: `go mod download`
-4. Run the chat example: `go run examples/chat/main.go`
-5. Run the Twitter bot: `go run examples/twitter/main.go`
+3. Install dependencies:
+```bash
+go mod download
+```
+4. Run the chat example:
+```bash
+go run examples/chat/main.go
+```
+6. Run the Twitter bot:
+```bash
+go run examples/twitter/main.go
+```
 
 ## Environment Variables
 ```env
