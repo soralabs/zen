@@ -7,6 +7,8 @@ import (
 
 var markdownCodeBlockRegex = regexp.MustCompile("(?s)^```[a-z]*\n?(.*?)\n?```$")
 
+// SmartUnmarshal removes Markdown code fences from the input data (if present)
+// and then unmarshals the remaining JSON into `v`.
 func SmartUnmarshal(data []byte, v interface{}) error {
 	if len(data) == 0 {
 		return nil
