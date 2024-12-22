@@ -1,5 +1,10 @@
 # Zen - An Advanced Conversational LLM Framework
 
+## Table of Contents
+- [Oveeview](#overview)
+- [Core Features](#core-features)
+- [Quick Start](#quick-start)
+
 ## Overview
 Zen is a highly modular conversation engine built in Go that emphasizes pluggable architecture and platform independence. It provides a flexible foundation for building conversational systems through:
 
