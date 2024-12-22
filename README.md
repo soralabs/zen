@@ -1,7 +1,7 @@
 # Zen - An Advanced Conversational LLM Framework
 
 ## Table of Contents
-- [Oveeview](#overview)
+- [Overview](#overview)
 - [Core Features](#core-features)
 - [Quick Start](#quick-start)
 
