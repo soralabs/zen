@@ -3,6 +3,7 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Core Features](#core-features)
+- [Extension Points](#extension-points)
 - [Quick Start](#quick-start)
 
 ## Overview
