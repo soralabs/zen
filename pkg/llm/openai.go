@@ -16,6 +16,8 @@ type OpenAIProvider struct {
 	roles  map[Role]string
 }
 
+// NewOpenAIProvider creates and returns a new OpenAIProvider instance,
+// initializing a default mapping for models and roles if none are provided.
 func NewOpenAIProvider(config Config) *OpenAIProvider {
 	// Default model mapping if not provided
 	models := config.ModelConfig
@@ -43,6 +45,8 @@ func NewOpenAIProvider(config Config) *OpenAIProvider {
 	}
 }
 
+// GenerateCompletion sends a conversation to the OpenAI ChatCompletion API
+// and returns the model's text completion.
 func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, req CompletionRequest) (string, error) {
 	resp, err := p.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 		Model:       p.getModel(req.ModelType),
@@ -60,6 +64,7 @@ func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, req CompletionR
 	return resp.Choices[0].Message.Content, nil
 }
 
+// GenerateStructuredOutput prompts the OpenAI API to return JSON data conforming
 func (p *OpenAIProvider) GenerateStructuredOutput(ctx context.Context, req StructuredOutputRequest, result interface{}) error {
 	schema, err := jsonschema.GenerateSchemaForType(result)
 	if err != nil {
@@ -90,6 +95,7 @@ func (p *OpenAIProvider) GenerateStructuredOutput(ctx context.Context, req Struc
 	return schema.Unmarshal(resp.Choices[0].Message.Content, result)
 }
 
+// EmbedText generates an embedding vector for the given text using the Ada V2 model
 func (p *OpenAIProvider) EmbedText(ctx context.Context, text string) ([]float32, error) {
 	resp, err := p.client.CreateEmbeddings(ctx, openai.EmbeddingRequest{
 		Input: []string{text},
