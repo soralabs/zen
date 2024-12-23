@@ -7,7 +7,7 @@
 - [Quick Start](#quick-start)
 
 ## Overview
-Zen is a highly modular conversation engine built in Go that emphasizes pluggable architecture and platform independence. It provides a flexible foundation for building conversational systems through:
+Zen is a highly modular AI conversation engine built in Go that emphasizes pluggable architecture and platform independence. It provides a flexible foundation for building conversational systems through:
 
 - Plugin-based architecture with hot-swappable components
 - Multi-provider LLM support (OpenAI, custom providers)
