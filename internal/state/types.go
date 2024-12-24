@@ -27,7 +27,8 @@ type State struct {
 	Actor *db.Actor // Information about where it came from
 
 	// Recent data
-	RecentInteractions []db.Fragment
+	RecentInteractions   []db.Fragment
+	RelevantInteractions []db.Fragment
 
 	// Manager-specific data storage
 	// Stores data provided by various managers keyed by StateDataKey

@@ -73,7 +73,14 @@ func (e *Engine) UpdateState(s *state.State) error {
 		return fmt.Errorf("failed to get recent interactions: %w", err)
 	}
 
+	relevantInteractions, err := e.interactionFragmentStore.SearchSimilar(s.Input.Embedding, s.Input.SessionID, 20)
+	if err != nil {
+		return fmt.Errorf("failed to get relevant interactions: %w", err)
+	}
+
 	s.RecentInteractions = append(s.RecentInteractions, recentInteractions...)
+
+	s.RelevantInteractions = append(s.RelevantInteractions, e.filterInteractions(s.RecentInteractions, relevantInteractions)...)
 
 	actor, err := e.actorStore.GetByID(s.Input.ActorID)
 	if err != nil {
@@ -82,4 +89,24 @@ func (e *Engine) UpdateState(s *state.State) error {
 	s.Actor = actor
 
 	return nil
+}
+
+func (e *Engine) filterInteractions(i1, i2 []db.Fragment) []db.Fragment {
+	seen := make(map[id.ID]bool, len(i2))
+
+	for _, fragment := range i2 {
+		seen[fragment.ID] = true
+	}
+
+	result := make([]db.Fragment, len(i2))
+	copy(result, i2)
+
+	for _, fragment := range i1 {
+		if !seen[fragment.ID] {
+			result = append(result, fragment)
+			seen[fragment.ID] = true
+		}
+	}
+
+	return result
 }
