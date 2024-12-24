@@ -15,7 +15,17 @@ func NewPromptBuilder(s *State) *PromptBuilder {
 		state:     s,
 		sections:  make([]PromptSection, 0),
 		stateData: make(map[StateDataKey]interface{}),
+		funcMap:   make(template.FuncMap),
 	}
+}
+
+// Method to register template functions
+func (tb *PromptBuilder) WithFunction(name string, fn interface{}) *PromptBuilder {
+	if tb.err != nil {
+		return tb
+	}
+	tb.funcMap[name] = fn
+	return tb
 }
 
 // AddSection adds a new template section with the specified role
@@ -121,7 +131,7 @@ func (tb *PromptBuilder) Compose() ([]llm.Message, error) {
 		}
 
 		// Create and execute template
-		tmpl, err := template.New("section").Parse(section.Template)
+		tmpl, err := template.New("section").Funcs(tb.funcMap).Parse(section.Template)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse template section: %w", err)
 		}

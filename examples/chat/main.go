@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"time"
 	"zen/internal/db"
 	"zen/internal/engine"
 	"zen/internal/managers"
@@ -261,6 +263,21 @@ func main() {
 
 		templateBuilder := state.NewPromptBuilder(currentState)
 
+		templateBuilder.WithFunction("formatInteractions", func(fragments []db.Fragment) string {
+			var builder strings.Builder
+			for _, f := range fragments {
+				actorName := "Unknown"
+				if f.Actor != nil {
+					actorName = f.Actor.Name
+				}
+				builder.WriteString(fmt.Sprintf("[%s] %s: %s\n",
+					time.Since(f.CreatedAt).Round(time.Second),
+					actorName,
+					f.Content))
+			}
+			return builder.String()
+		})
+
 		templateBuilder.AddSystemSection(`Your Core Configuration:
 	{{.base_personality}}
 	
@@ -282,7 +299,11 @@ func main() {
 	{{.actor_insights}}
 	
 	# Unique Insights
-	{{.unique_insights}}`)
+	{{.unique_insights}}
+	
+	# Relevant Interactions
+	{{formatInteractions .relevant_interactions}}
+	`)
 
 		// Add previous messages
 		for i := len(currentState.RecentInteractions) - 1; i >= 0; i-- {
