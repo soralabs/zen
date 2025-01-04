@@ -153,7 +153,7 @@ func (e *Engine) GenerateResponse(messages []llm.Message, sessionID id.ID) (*db.
 	}
 
 	// Generate embedding for the response
-	embedding, err := e.llmClient.EmbedText(response)
+	embedding, err := e.llmClient.EmbedText(response.Content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create embedding for response: %v", err)
 	}
@@ -163,7 +163,7 @@ func (e *Engine) GenerateResponse(messages []llm.Message, sessionID id.ID) (*db.
 		ID:        id.New(),
 		ActorID:   e.ID,
 		SessionID: sessionID,
-		Content:   response,
+		Content:   response.Content,
 		Embedding: pgvector.NewVector(embedding),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

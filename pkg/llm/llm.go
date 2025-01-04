@@ -32,7 +32,7 @@ func NewLLMClient(config Config) (*LLMClient, error) {
 }
 
 // Implement the Provider interface by delegating to the actual provider
-func (c *LLMClient) GenerateCompletion(req CompletionRequest) (string, error) {
+func (c *LLMClient) GenerateCompletion(req CompletionRequest) (Message, error) {
 	return c.provider.GenerateCompletion(c.ctx, req)
 }
 
@@ -66,9 +66,9 @@ func NewAssistantMessage(content string) Message {
 	}
 }
 
-func NewFunctionMessage(content string, name string) Message {
+func NewToolMessage(content string, name string) Message {
 	return Message{
-		Role:    RoleFunction,
+		Role:    RoleTool,
 		Content: content,
 		Name:    name,
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 type Provider interface {
-	GenerateCompletion(ctx context.Context, req CompletionRequest) (string, error)
+	GenerateCompletion(ctx context.Context, req CompletionRequest) (Message, error)
 	GenerateStructuredOutput(ctx context.Context, req StructuredOutputRequest, result interface{}) error
 	EmbedText(ctx context.Context, text string) ([]float32, error)
 }

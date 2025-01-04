@@ -6,13 +6,19 @@ const (
 	RoleSystem    Role = "system"
 	RoleUser      Role = "user"
 	RoleAssistant Role = "assistant"
-	RoleFunction  Role = "function"
+	RoleTool      Role = "tool"
 )
 
+type ToolCall struct {
+	Name      string
+	Arguments string
+}
+
 type Message struct {
-	Role    Role
-	Content string
-	Name    string
+	Role     Role
+	Content  string
+	Name     string
+	ToolCall *ToolCall
 }
 
 type ModelType string

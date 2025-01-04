@@ -63,10 +63,6 @@ func (tb *PromptBuilder) AddAssistantSection(templateText string) *PromptBuilder
 	return tb.AddSection(llm.RoleAssistant, templateText)
 }
 
-func (tb *PromptBuilder) AddFunctionSection(templateText string, name string) *PromptBuilder {
-	return tb.AddSectionWithName(llm.RoleFunction, templateText, name)
-}
-
 // WithManagerData adds a single piece of manager-provided data to the template context
 // Returns an error if the specified key doesn't exist in the state's manager data
 func (tb *PromptBuilder) WithManagerData(key StateDataKey) *PromptBuilder {
