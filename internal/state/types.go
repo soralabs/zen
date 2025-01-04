@@ -61,6 +61,6 @@ type PromptBuilder struct {
 	state     *State                       // Reference to the current state
 	sections  []PromptSection              // Ordered list of prompt sections
 	stateData map[StateDataKey]interface{} // Manager-provided data for template rendering
-	funcMap   template.FuncMap             // Function map for custom template functions
+	helpers   template.FuncMap             // Function map for custom template functions
 	err       error                        // Tracks any errors during building
 }

@@ -263,7 +263,7 @@ func main() {
 
 		templateBuilder := state.NewPromptBuilder(currentState)
 
-		templateBuilder.WithFunction("formatInteractions", func(fragments []db.Fragment) string {
+		templateBuilder.WithHelper("formatInteractions", func(fragments []db.Fragment) string {
 			var builder strings.Builder
 			for _, f := range fragments {
 				actorName := "Unknown"

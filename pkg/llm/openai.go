@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"zen/pkg/logger"
 
@@ -48,10 +49,21 @@ func NewOpenAIProvider(config Config) *OpenAIProvider {
 // GenerateCompletion sends a conversation to the OpenAI ChatCompletion API
 // and returns the model's text completion.
 func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, req CompletionRequest) (string, error) {
+	functions := make([]openai.FunctionDefinition, len(req.Tools))
+	for i, tool := range req.Tools {
+		schema := tool.GetSchema()
+		functions[i] = openai.FunctionDefinition{
+			Name:        tool.GetName(),
+			Description: tool.GetDescription(),
+			Parameters:  schema.Parameters,
+		}
+	}
+
 	resp, err := p.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 		Model:       p.getModel(req.ModelType),
 		Messages:    p.convertMessages(req.Messages),
 		Temperature: req.Temperature,
+		Functions:   functions,
 	})
 	if err != nil {
 		return "", fmt.Errorf("OpenAI API error: %w", err)
@@ -59,6 +71,21 @@ func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, req CompletionR
 
 	if len(resp.Choices) == 0 {
 		return "", fmt.Errorf("no completion returned")
+	}
+
+	// Handle function calls if present
+	if resp.Choices[0].Message.FunctionCall != nil {
+		call := resp.Choices[0].Message.FunctionCall
+		for _, tool := range req.Tools {
+			if tool.GetName() == call.Name {
+				result, err := tool.Execute(ctx, json.RawMessage(call.Arguments))
+				if err != nil {
+					return "", fmt.Errorf("tool execution error: %w", err)
+				}
+				return string(result), nil
+			}
+		}
+		return "", fmt.Errorf("function %s not found", call.Name)
 	}
 
 	return resp.Choices[0].Message.Content, nil
