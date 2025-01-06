@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"zen/pkg/logger"
 
@@ -34,7 +35,7 @@ func NewOpenAIProvider(config Config) *OpenAIProvider {
 		RoleSystem:    openai.ChatMessageRoleSystem,
 		RoleUser:      openai.ChatMessageRoleUser,
 		RoleAssistant: openai.ChatMessageRoleAssistant,
-		RoleFunction:  openai.ChatMessageRoleFunction,
+		RoleTool:      openai.ChatMessageRoleTool,
 	}
 
 	return &OpenAIProvider{
@@ -47,21 +48,77 @@ func NewOpenAIProvider(config Config) *OpenAIProvider {
 
 // GenerateCompletion sends a conversation to the OpenAI ChatCompletion API
 // and returns the model's text completion.
-func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, req CompletionRequest) (string, error) {
+func (p *OpenAIProvider) GenerateCompletion(ctx context.Context, req CompletionRequest) (Message, error) {
+	functions := make([]openai.FunctionDefinition, len(req.Tools))
+	for i, tool := range req.Tools {
+		schema := tool.GetSchema()
+		functions[i] = openai.FunctionDefinition{
+			Name:        tool.GetName(),
+			Description: tool.GetDescription(),
+			Parameters:  schema.Parameters,
+		}
+	}
+
 	resp, err := p.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 		Model:       p.getModel(req.ModelType),
 		Messages:    p.convertMessages(req.Messages),
 		Temperature: req.Temperature,
+		Functions:   functions,
 	})
 	if err != nil {
-		return "", fmt.Errorf("OpenAI API error: %w", err)
+		return Message{}, fmt.Errorf("OpenAI API error: %w", err)
 	}
 
 	if len(resp.Choices) == 0 {
-		return "", fmt.Errorf("no completion returned")
+		return Message{}, fmt.Errorf("no completion returned")
 	}
 
-	return resp.Choices[0].Message.Content, nil
+	// Handle function calls if present
+	if resp.Choices[0].Message.FunctionCall != nil {
+		call := resp.Choices[0].Message.FunctionCall
+		for _, tool := range req.Tools {
+			if tool.GetName() == call.Name {
+				// Execute the tool
+				result, err := tool.Execute(ctx, json.RawMessage(call.Arguments))
+				if err != nil {
+					return Message{}, fmt.Errorf("tool execution error: %w", err)
+				}
+
+				// Create a new message array with the tool result
+				toolResultMessages := append(req.Messages,
+					Message{
+						Role:    RoleAssistant,
+						Content: "",
+						ToolCall: &ToolCall{
+							Name:      call.Name,
+							Arguments: string(call.Arguments),
+						},
+					},
+					Message{
+						Role:    RoleTool,
+						Content: string(result),
+						Name:    tool.GetName(),
+					},
+				)
+
+				// Make a follow-up completion request with the tool result
+				followUpReq := CompletionRequest{
+					Messages:    toolResultMessages,
+					ModelType:   req.ModelType,
+					Temperature: req.Temperature,
+					Tools:       req.Tools,
+				}
+
+				return p.GenerateCompletion(ctx, followUpReq)
+			}
+		}
+		return Message{}, fmt.Errorf("function %s not found", call.Name)
+	}
+
+	return Message{
+		Role:    RoleAssistant,
+		Content: resp.Choices[0].Message.Content,
+	}, nil
 }
 
 // GenerateStructuredOutput prompts the OpenAI API to return JSON data conforming
@@ -124,12 +181,19 @@ func (p *OpenAIProvider) getModel(modelType ModelType) string {
 // convertMessages transforms internal message format to OpenAI API format.
 func (p *OpenAIProvider) convertMessages(messages []Message) []openai.ChatCompletionMessage {
 	converted := make([]openai.ChatCompletionMessage, len(messages))
-	for i, msg := range messages {
-		converted[i] = openai.ChatCompletionMessage{
+	for _, msg := range messages {
+		conv := openai.ChatCompletionMessage{
 			Role:    p.mapRole(msg.Role),
 			Content: msg.Content,
 			Name:    msg.Name,
 		}
+		if msg.ToolCall != nil {
+			conv.FunctionCall = &openai.FunctionCall{
+				Name:      msg.ToolCall.Name,
+				Arguments: msg.ToolCall.Arguments,
+			}
+		}
+		converted = append(converted, conv)
 	}
 	return converted
 }

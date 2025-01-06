@@ -15,6 +15,7 @@ import (
 	"zen/internal/managers/personality"
 	"zen/internal/state"
 	"zen/internal/stores"
+	random_tools "zen/internal/tools/random"
 	"zen/pkg/id"
 	"zen/pkg/llm"
 	"zen/pkg/logger"
@@ -22,6 +23,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
+	toolkit "github.com/soralabs/toolkit/go"
 )
 
 func main() {
@@ -63,6 +65,13 @@ func main() {
 	fragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTableInteraction)
 	personalityFragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTablePersonality)
 	insightFragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTableInsight)
+
+	randomToolKit := toolkit.NewToolkit("random_tools",
+		toolkit.WithToolkitDescription("A toolkit that include random generation"),
+		toolkit.WithTools(
+			random_tools.NewRandomNumberTool(),
+		),
+	)
 
 	// Create a user
 	userID := id.FromString("user")
@@ -263,7 +272,7 @@ func main() {
 
 		templateBuilder := state.NewPromptBuilder(currentState)
 
-		templateBuilder.WithFunction("formatInteractions", func(fragments []db.Fragment) string {
+		templateBuilder.WithHelper("formatInteractions", func(fragments []db.Fragment) string {
 			var builder strings.Builder
 			for _, f := range fragments {
 				actorName := "Unknown"
@@ -323,6 +332,9 @@ func main() {
 		templateBuilder.WithManagerData(insight.SessionInsights)
 		templateBuilder.WithManagerData(insight.ActorInsights)
 		templateBuilder.WithManagerData(insight.UniqueInsights)
+		templateBuilder.WithToolkit(randomToolKit)
+
+		tools := templateBuilder.GetTools()
 
 		messages, err := templateBuilder.Compose()
 		if err != nil {
@@ -331,7 +343,7 @@ func main() {
 		}
 
 		// Generate completion
-		responseFragment, err := assistant.GenerateResponse(messages, sessionID)
+		responseFragment, err := assistant.GenerateResponse(messages, sessionID, tools...)
 		if err != nil {
 			log.Errorf("Failed to generate response: %v", err)
 			continue

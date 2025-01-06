@@ -6,6 +6,8 @@ import (
 	"html/template"
 	"reflect"
 	"zen/pkg/llm"
+
+	toolkit "github.com/soralabs/toolkit/go"
 )
 
 // NewPromptBuilder creates a new template builder instance
@@ -15,16 +17,16 @@ func NewPromptBuilder(s *State) *PromptBuilder {
 		state:     s,
 		sections:  make([]PromptSection, 0),
 		stateData: make(map[StateDataKey]interface{}),
-		funcMap:   make(template.FuncMap),
+		helpers:   make(template.FuncMap),
 	}
 }
 
 // Method to register template functions
-func (tb *PromptBuilder) WithFunction(name string, fn interface{}) *PromptBuilder {
+func (tb *PromptBuilder) WithHelper(name string, fn interface{}) *PromptBuilder {
 	if tb.err != nil {
 		return tb
 	}
-	tb.funcMap[name] = fn
+	tb.helpers[name] = fn
 	return tb
 }
 
@@ -63,10 +65,6 @@ func (tb *PromptBuilder) AddAssistantSection(templateText string) *PromptBuilder
 	return tb.AddSection(llm.RoleAssistant, templateText)
 }
 
-func (tb *PromptBuilder) AddFunctionSection(templateText string, name string) *PromptBuilder {
-	return tb.AddSectionWithName(llm.RoleFunction, templateText, name)
-}
-
 // WithManagerData adds a single piece of manager-provided data to the template context
 // Returns an error if the specified key doesn't exist in the state's manager data
 func (tb *PromptBuilder) WithManagerData(key StateDataKey) *PromptBuilder {
@@ -95,6 +93,22 @@ func (tb *PromptBuilder) WithManagerDataBatch(keys ...StateDataKey) *PromptBuild
 		}
 	}
 	return tb
+}
+
+// WithTools adds a list of tools to the state
+func (tb *PromptBuilder) WithTools(tools ...toolkit.Tool) *PromptBuilder {
+	tb.state.Tools = append(tb.state.Tools, tools...)
+	return tb
+}
+
+// WithToolkit adds a toolkit to the state
+func (tb *PromptBuilder) WithToolkit(toolkit *toolkit.Toolkit) *PromptBuilder {
+	tb.state.Tools = append(tb.state.Tools, toolkit.GetTools()...)
+	return tb
+}
+
+func (tb *PromptBuilder) GetTools() []toolkit.Tool {
+	return tb.state.Tools
 }
 
 // Compose processes all template sections and returns an array of formatted messages
@@ -131,7 +145,7 @@ func (tb *PromptBuilder) Compose() ([]llm.Message, error) {
 		}
 
 		// Create and execute template
-		tmpl, err := template.New("section").Funcs(tb.funcMap).Parse(section.Template)
+		tmpl, err := template.New("section").Funcs(tb.helpers).Parse(section.Template)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse template section: %w", err)
 		}

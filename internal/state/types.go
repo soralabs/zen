@@ -4,6 +4,8 @@ import (
 	"html/template"
 	"zen/internal/db"
 	"zen/pkg/llm"
+
+	toolkit "github.com/soralabs/toolkit/go"
 )
 
 // Package state provides core state management functionality for the agent system
@@ -30,7 +32,7 @@ type State struct {
 	// Recent data
 	RecentInteractions   []db.Fragment
 	RelevantInteractions []db.Fragment
-
+	Tools                []toolkit.Tool
 	// Manager-specific data storage
 	// Stores data provided by various managers keyed by StateDataKey
 	managerData map[StateDataKey]interface{}
@@ -61,6 +63,6 @@ type PromptBuilder struct {
 	state     *State                       // Reference to the current state
 	sections  []PromptSection              // Ordered list of prompt sections
 	stateData map[StateDataKey]interface{} // Manager-provided data for template rendering
-	funcMap   template.FuncMap             // Function map for custom template functions
+	helpers   template.FuncMap             // Function map for custom template functions
 	err       error                        // Tracks any errors during building
 }

@@ -50,6 +50,14 @@ Zen is a highly modular AI conversation engine built in Go that emphasizes plugg
   - Customizable fragment storage
   - Vector embedding support
 
+### Toolkit/Function System
+- **Pluggable Tool/Function Integration**:
+  - Support for custom tool implementations
+  - Built-in toolkit management
+  - Function calling capabilities
+  - Automatic tool response handling
+  - State-aware tool execution
+
 ## Extension Points
 1. **LLM Providers**: Add new AI providers by implementing the LLM interface
 ```go

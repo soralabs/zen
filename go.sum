@@ -47,6 +47,8 @@ github.com/sashabaranov/go-openai v1.35.7 h1:icyrRbkYoKPa4rbO1WSInpJu3qDQrPEnsoJ
 github.com/sashabaranov/go-openai v1.35.7/go.mod h1:lj5b/K+zjTSFxVLijLSTDZuP7adOgerWeFyZLUhAKRg=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=
 github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
+github.com/soralabs/toolkit/go v0.0.0-20250104120828-ea094df8becc h1:q3RGLljkgGaer1Bv/wiybEWtNCE/Mmod70LR+VK/kCU=
+github.com/soralabs/toolkit/go v0.0.0-20250104120828-ea094df8becc/go.mod h1:izOAac2gRnlFkdRkvDDLIUt1fMVnW2Y9Xot0ORfNjtg=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
