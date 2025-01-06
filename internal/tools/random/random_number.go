@@ -11,17 +11,10 @@ import (
 	toolkit "github.com/soralabs/toolkit/go"
 )
 
-type RandomGeneration struct {
-	Min       float64   `json:"min"`
-	Max       float64   `json:"max"`
-	Generated float64   `json:"generated"`
-	Time      time.Time `json:"timestamp"`
-}
-
 type RandomNumberTool struct {
 	toolkit.Tool
 
-	history []RandomGeneration
+	history []RandomNumberGeneration
 	mu      sync.Mutex
 }
 
@@ -90,7 +83,7 @@ func (t *RandomNumberTool) Execute(ctx context.Context, params json.RawMessage) 
 	random := input.Min + rand.Float64()*(input.Max-input.Min)
 
 	// Store result
-	gen := RandomGeneration{
+	gen := RandomNumberGeneration{
 		Min:       input.Min,
 		Max:       input.Max,
 		Generated: random,
@@ -115,18 +108,18 @@ func (t *RandomNumberTool) Execute(ctx context.Context, params json.RawMessage) 
 	return response, nil
 }
 
-func (t *RandomNumberTool) GetHistory() []RandomGeneration {
+func (t *RandomNumberTool) GetHistory() []RandomNumberGeneration {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return append([]RandomGeneration{}, t.history...)
+	return append([]RandomNumberGeneration{}, t.history...)
 }
 
-func (t *RandomNumberTool) GetGeneration(id int) (RandomGeneration, error) {
+func (t *RandomNumberTool) GetGeneration(id int) (RandomNumberGeneration, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	if id < 0 || id >= len(t.history) {
-		return RandomGeneration{}, fmt.Errorf("generation ID %d not found", id)
+		return RandomNumberGeneration{}, fmt.Errorf("generation ID %d not found", id)
 	}
 	return t.history[id], nil
 }
