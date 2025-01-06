@@ -15,6 +15,7 @@ import (
 	"zen/internal/managers/personality"
 	"zen/internal/state"
 	"zen/internal/stores"
+	random_toolkit "zen/internal/toolkits/random"
 	"zen/pkg/id"
 	"zen/pkg/llm"
 	"zen/pkg/logger"
@@ -22,7 +23,6 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
-	toolkit "github.com/soralabs/toolkit/go"
 )
 
 func main() {
@@ -64,15 +64,6 @@ func main() {
 	fragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTableInteraction)
 	personalityFragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTablePersonality)
 	insightFragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTableInsight)
-
-	randomNumberTool := NewRandomNumberTool()
-
-	randomToolKit := toolkit.NewToolkit("random_tools",
-		toolkit.WithToolkitDescription("A toolkit that include random generation"),
-		toolkit.WithTools(
-			randomNumberTool,
-		),
-	)
 
 	// Create a user
 	userID := id.FromString("user")
@@ -333,7 +324,7 @@ func main() {
 		templateBuilder.WithManagerData(insight.SessionInsights)
 		templateBuilder.WithManagerData(insight.ActorInsights)
 		templateBuilder.WithManagerData(insight.UniqueInsights)
-		templateBuilder.WithToolkit(randomToolKit)
+		templateBuilder.WithToolkit(random_toolkit.Toolkit)
 
 		tools := templateBuilder.GetTools()
 
