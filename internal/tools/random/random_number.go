@@ -1,4 +1,4 @@
-package random_toolkit
+package random_tools
 
 import (
 	"context"
