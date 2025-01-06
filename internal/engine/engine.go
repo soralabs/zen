@@ -11,6 +11,7 @@ import (
 	"zen/pkg/options"
 
 	"github.com/pgvector/pgvector-go"
+	toolkit "github.com/soralabs/toolkit/go"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -141,12 +142,13 @@ func (e *Engine) PostProcess(response *db.Fragment, currentState *state.State) e
 // 2. Creates embedding for the response
 // 3. Builds response fragment with metadata
 // Returns the response fragment and any error encountered.
-func (e *Engine) GenerateResponse(messages []llm.Message, sessionID id.ID) (*db.Fragment, error) {
+func (e *Engine) GenerateResponse(messages []llm.Message, sessionID id.ID, tools ...toolkit.Tool) (*db.Fragment, error) {
 	// Generate completion
 	response, err := e.llmClient.GenerateCompletion(llm.CompletionRequest{
 		Messages:    messages,
 		ModelType:   llm.ModelTypeDefault,
 		Temperature: 0.7,
+		Tools:       tools,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate completion: %v", err)

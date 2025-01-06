@@ -22,6 +22,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
+	toolkit "github.com/soralabs/toolkit/go"
 )
 
 func main() {
@@ -63,6 +64,15 @@ func main() {
 	fragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTableInteraction)
 	personalityFragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTablePersonality)
 	insightFragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTableInsight)
+
+	randomNumberTool := NewRandomNumberTool()
+
+	randomToolKit := toolkit.NewToolkit("random_tools",
+		toolkit.WithToolkitDescription("A toolkit that include random generation"),
+		toolkit.WithTools(
+			randomNumberTool,
+		),
+	)
 
 	// Create a user
 	userID := id.FromString("user")
@@ -323,6 +333,9 @@ func main() {
 		templateBuilder.WithManagerData(insight.SessionInsights)
 		templateBuilder.WithManagerData(insight.ActorInsights)
 		templateBuilder.WithManagerData(insight.UniqueInsights)
+		templateBuilder.WithToolkit(randomToolKit)
+
+		tools := templateBuilder.GetTools()
 
 		messages, err := templateBuilder.Compose()
 		if err != nil {
@@ -331,7 +344,7 @@ func main() {
 		}
 
 		// Generate completion
-		responseFragment, err := assistant.GenerateResponse(messages, sessionID)
+		responseFragment, err := assistant.GenerateResponse(messages, sessionID, tools...)
 		if err != nil {
 			log.Errorf("Failed to generate response: %v", err)
 			continue

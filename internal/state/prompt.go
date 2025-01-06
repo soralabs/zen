@@ -6,6 +6,8 @@ import (
 	"html/template"
 	"reflect"
 	"zen/pkg/llm"
+
+	toolkit "github.com/soralabs/toolkit/go"
 )
 
 // NewPromptBuilder creates a new template builder instance
@@ -91,6 +93,22 @@ func (tb *PromptBuilder) WithManagerDataBatch(keys ...StateDataKey) *PromptBuild
 		}
 	}
 	return tb
+}
+
+// WithTools adds a list of tools to the state
+func (tb *PromptBuilder) WithTools(tools ...toolkit.Tool) *PromptBuilder {
+	tb.state.Tools = append(tb.state.Tools, tools...)
+	return tb
+}
+
+// WithToolkit adds a toolkit to the state
+func (tb *PromptBuilder) WithToolkit(toolkit *toolkit.Toolkit) *PromptBuilder {
+	tb.state.Tools = append(tb.state.Tools, toolkit.GetTools()...)
+	return tb
+}
+
+func (tb *PromptBuilder) GetTools() []toolkit.Tool {
+	return tb.state.Tools
 }
 
 // Compose processes all template sections and returns an array of formatted messages
