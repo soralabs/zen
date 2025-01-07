@@ -3,7 +3,8 @@ package llm
 import (
 	"context"
 	"fmt"
-	"zen/pkg/logger"
+
+	"github.com/soralabs/zen/pkg/logger"
 )
 
 // LLMClient is the main client that manages provider interactions
