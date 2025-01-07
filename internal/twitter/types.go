@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/soralabs/zen/pkg/engine"
-	"github.com/soralabs/zen/pkg/llm"
-	"github.com/soralabs/zen/pkg/logger"
-	"github.com/soralabs/zen/pkg/options"
+	"github.com/soralabs/zen/engine"
+	"github.com/soralabs/zen/llm"
+	"github.com/soralabs/zen/logger"
+	"github.com/soralabs/zen/options"
 	"github.com/soralabs/zen/pkg/twitter"
 
 	"gorm.io/gorm"

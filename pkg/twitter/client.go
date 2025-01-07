@@ -3,7 +3,7 @@ package twitter
 import (
 	"context"
 
-	"github.com/soralabs/zen/pkg/logger"
+	"github.com/soralabs/zen/logger"
 )
 
 type Client struct {
