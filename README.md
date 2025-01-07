@@ -114,8 +114,8 @@ Platform-specific credentials as needed
 ## Architecture
 The project follows a clean, modular architecture:
 
-- `internal/engine`: Core conversation engine
-- `internal/managers`: Plugin manager system
-- `internal/state`: Shared state management
+- `pkg/engine`: Core conversation engine
+- `pkg/manager`: Plugin manager system
+- `pkg/state`: Shared state management
 - `pkg/llm`: LLM provider interfaces
 - `examples/`: Reference implementations
