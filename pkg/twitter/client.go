@@ -2,7 +2,8 @@ package twitter
 
 import (
 	"context"
-	"zen/pkg/logger"
+
+	"github.com/soralabs/zen/pkg/logger"
 )
 
 type Client struct {

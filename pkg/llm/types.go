@@ -2,7 +2,8 @@ package llm
 
 import (
 	"context"
-	"zen/pkg/logger"
+
+	"github.com/soralabs/zen/pkg/logger"
 )
 
 // ProviderType identifies different LLM providers

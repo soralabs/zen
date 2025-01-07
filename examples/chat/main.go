@@ -8,22 +8,22 @@ import (
 	"os"
 	"strings"
 	"time"
-	"zen/internal/db"
-	"zen/internal/engine"
-	"zen/internal/managers"
-	"zen/internal/managers/insight"
-	"zen/internal/managers/personality"
-	"zen/internal/state"
-	"zen/internal/stores"
-	random_tools "zen/internal/tools/random"
-	"zen/pkg/id"
-	"zen/pkg/llm"
-	"zen/pkg/logger"
-	"zen/pkg/options"
 
 	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
 	toolkit "github.com/soralabs/toolkit/go"
+	"github.com/soralabs/zen/pkg/db"
+	"github.com/soralabs/zen/pkg/engine"
+	"github.com/soralabs/zen/pkg/id"
+	"github.com/soralabs/zen/pkg/llm"
+	"github.com/soralabs/zen/pkg/logger"
+	"github.com/soralabs/zen/pkg/manager"
+	"github.com/soralabs/zen/pkg/managers/insight"
+	"github.com/soralabs/zen/pkg/managers/personality"
+	"github.com/soralabs/zen/pkg/options"
+	"github.com/soralabs/zen/pkg/state"
+	"github.com/soralabs/zen/pkg/stores"
+	random_tools "github.com/soralabs/zen/pkg/tools/random"
 )
 
 func main() {
@@ -106,15 +106,15 @@ func main() {
 
 	// Initialize insight manager
 	insightManager, err := insight.NewInsightManager(
-		[]options.Option[managers.BaseManager]{
-			managers.WithLogger(log.NewSubLogger("insight", &logger.SubLoggerOpts{})),
-			managers.WithContext(ctx),
-			managers.WithActorStore(actorStore),
-			managers.WithLLM(llmClient),
-			managers.WithSessionStore(sessionStore),
-			managers.WithFragmentStore(insightFragmentStore),
-			managers.WithInteractionFragmentStore(fragmentStore),
-			managers.WithAssistantDetails(agentName, agentID),
+		[]options.Option[manager.BaseManager]{
+			manager.WithLogger(log.NewSubLogger("insight", &logger.SubLoggerOpts{})),
+			manager.WithContext(ctx),
+			manager.WithActorStore(actorStore),
+			manager.WithLLM(llmClient),
+			manager.WithSessionStore(sessionStore),
+			manager.WithFragmentStore(insightFragmentStore),
+			manager.WithInteractionFragmentStore(fragmentStore),
+			manager.WithAssistantDetails(agentName, agentID),
 		},
 	)
 	if err != nil {
@@ -122,15 +122,15 @@ func main() {
 	}
 
 	personalityManager, err := personality.NewPersonalityManager(
-		[]options.Option[managers.BaseManager]{
-			managers.WithLogger(log.NewSubLogger("personality", &logger.SubLoggerOpts{})),
-			managers.WithContext(ctx),
-			managers.WithActorStore(actorStore),
-			managers.WithLLM(llmClient),
-			managers.WithSessionStore(sessionStore),
-			managers.WithFragmentStore(personalityFragmentStore),
-			managers.WithInteractionFragmentStore(fragmentStore),
-			managers.WithAssistantDetails(agentName, agentID),
+		[]options.Option[manager.BaseManager]{
+			manager.WithLogger(log.NewSubLogger("personality", &logger.SubLoggerOpts{})),
+			manager.WithContext(ctx),
+			manager.WithActorStore(actorStore),
+			manager.WithLLM(llmClient),
+			manager.WithSessionStore(sessionStore),
+			manager.WithFragmentStore(personalityFragmentStore),
+			manager.WithInteractionFragmentStore(fragmentStore),
+			manager.WithAssistantDetails(agentName, agentID),
 		},
 		personality.WithPersonality(&personality.Personality{
 			Name:        agentName,

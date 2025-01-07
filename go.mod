@@ -1,4 +1,4 @@
-module zen
+module github.com/soralabs/zen
 
 go 1.23.3
 
