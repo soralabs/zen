@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/soralabs/zen/pkg/db"
-	"github.com/soralabs/zen/pkg/engine"
-	"github.com/soralabs/zen/pkg/id"
-	"github.com/soralabs/zen/pkg/logger"
-	"github.com/soralabs/zen/pkg/manager"
-	"github.com/soralabs/zen/pkg/managers/insight"
-	"github.com/soralabs/zen/pkg/managers/personality"
-	twitter_manager "github.com/soralabs/zen/pkg/managers/twitter"
-	"github.com/soralabs/zen/pkg/options"
-	"github.com/soralabs/zen/pkg/stores"
+	"github.com/soralabs/zen/db"
+	"github.com/soralabs/zen/engine"
+	"github.com/soralabs/zen/id"
+	"github.com/soralabs/zen/logger"
+	"github.com/soralabs/zen/manager"
+	"github.com/soralabs/zen/managers/insight"
+	"github.com/soralabs/zen/managers/personality"
+	twitter_manager "github.com/soralabs/zen/managers/twitter"
+	"github.com/soralabs/zen/options"
 	"github.com/soralabs/zen/pkg/twitter"
+	"github.com/soralabs/zen/stores"
 )
 
 func New(opts ...options.Option[Twitter]) (*Twitter, error) {

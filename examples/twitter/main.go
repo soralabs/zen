@@ -10,8 +10,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
 	"github.com/soralabs/zen/internal/twitter"
-	"github.com/soralabs/zen/pkg/llm"
-	"github.com/soralabs/zen/pkg/logger"
+	"github.com/soralabs/zen/llm"
+	"github.com/soralabs/zen/logger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

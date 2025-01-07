@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/soralabs/zen/pkg/llm"
-	"github.com/soralabs/zen/pkg/logger"
-	"github.com/soralabs/zen/pkg/options"
+	"github.com/soralabs/zen/llm"
+	"github.com/soralabs/zen/logger"
+	"github.com/soralabs/zen/options"
 
 	"gorm.io/gorm"
 )
