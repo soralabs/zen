@@ -13,6 +13,7 @@ import (
 
 // Package twitter_manager provides functionality for managing Twitter-specific interactions
 // and conversation handling for the agent system.
+// Does not process regular tweeting, but rather interactions like replies and likes.
 
 // NewTwitterManager creates a new instance of TwitterManager with the provided options.
 // Initializes the base manager and Twitter-specific configurations.
@@ -57,6 +58,8 @@ func (tm *TwitterManager) GetDependencies() []manager.ManagerID {
 // 3. Reconstructs and stores the conversation thread
 func (tm *TwitterManager) Process(state *state.State) error {
 	// Only process Twitter messages
+	// TODO: instead of doing custom data to see, maybe in the state, we can define what managers to process
+	// and what managers to post process
 	platform, ok := state.GetCustomData("platform")
 	if !ok || platform != "twitter" {
 		return nil
