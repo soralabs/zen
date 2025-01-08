@@ -3,36 +3,13 @@ package twitter_manager
 import (
 	"fmt"
 	"strings"
-<<<<<<< Updated upstream:managers/twitter/helpers.go
-=======
-<<<<<<< Updated upstream:internal/managers/twitter/helpers.go
-	"zen/internal/db"
-	"zen/internal/managers/insight"
-	"zen/internal/managers/personality"
-	"zen/internal/state"
-	"zen/internal/utils"
-	"zen/pkg/id"
-	"zen/pkg/llm"
-	"zen/pkg/twitter"
-=======
->>>>>>> Stashed changes:internal/managers/twitter/helpers.go
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/soralabs/zen/db"
 	"github.com/soralabs/zen/id"
 	"github.com/soralabs/zen/internal/utils"
-<<<<<<< Updated upstream:managers/twitter/helpers.go
-	"github.com/soralabs/zen/llm"
-	"github.com/soralabs/zen/managers/insight"
-	"github.com/soralabs/zen/managers/personality"
 	"github.com/soralabs/zen/pkg/twitter"
 	"github.com/soralabs/zen/state"
-=======
-	"github.com/soralabs/zen/pkg/twitter"
-	"github.com/soralabs/zen/state"
->>>>>>> Stashed changes:managers/twitter/helpers.go
->>>>>>> Stashed changes:internal/managers/twitter/helpers.go
-
-	"github.com/mitchellh/mapstructure"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -417,10 +394,6 @@ func (tm *TwitterManager) decideTwitterActions(state *state.State) (*TwitterActi
 	return &TwitterActions{
 		ShouldTweet: true,
 	}, nil
-	// return &actions, nil
-	return &TwitterActions{
-		ShouldTweet: true,
-	}, nil
 }
 
 // sendTweet executes Twitter API operations and maintains local state consistency.
@@ -429,13 +402,6 @@ func (tm *TwitterManager) decideTwitterActions(state *state.State) (*TwitterActi
 // 2. Metadata synchronization with response data
 // 3. Local fragment identifier alignment
 func (tm *TwitterManager) sendTweet(response *db.Fragment, parsedTweet *twitter.ParsedTweet) error {
-	options := &twitter.TweetOptions{}
-
-	if len(parsedTweet.InReplyToTweetID) > 0 {
-		options.ReplyToTweetID = parsedTweet.InReplyToTweetID
-	}
-
-	tweet, err := tm.twitterClient.CreateTweet(response.Content, options)
 	options := &twitter.TweetOptions{}
 
 	if len(parsedTweet.InReplyToTweetID) > 0 {

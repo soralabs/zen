@@ -120,21 +120,11 @@ The project follows a clean, modular architecture:
 
 - `engine`: Core conversation engine
 - `manager`: Plugin manager system
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-- `state`: Shared state management
-- `llm`: LLM provider interfaces
-=======
-=======
->>>>>>> Stashed changes
 - `managers/*`: Built-in manager implementations
 - `state`: Shared state management
 - `llm`: LLM provider interfaces
-- `tools/*`: Built-in tool implementations, based on the toolkit package
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+- `stores`: Data storage implementations
+- `tools/*`: Built-in tool implementations
 - `examples/`: Reference implementations
 
 ## Using Zen as a Module
