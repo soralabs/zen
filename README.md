@@ -5,10 +5,11 @@
 </div>
 
 ## Table of Contents
-- [Overview](#overview)
+- [Overview](#Overview)
 - [Core Features](#core-features)
 - [Extension Points](#extension-points)
 - [Quick Start](#quick-start)
+- [Using Zen as a Module](#using-zen-as-a-module)
 
 ## Overview
 Zen is a highly modular AI conversation engine built in Go that emphasizes pluggable architecture and platform independence. It provides a flexible foundation for building conversational systems through:
