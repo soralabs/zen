@@ -4,16 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/soralabs/zen/db"
 	"github.com/soralabs/zen/id"
 	"github.com/soralabs/zen/internal/utils"
-	"github.com/soralabs/zen/llm"
-	"github.com/soralabs/zen/managers/insight"
-	"github.com/soralabs/zen/managers/personality"
 	"github.com/soralabs/zen/pkg/twitter"
 	"github.com/soralabs/zen/state"
-
-	"github.com/mitchellh/mapstructure"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -302,57 +298,102 @@ func (tm *TwitterManager) formatUserName(msg db.Fragment) string {
 // The function implements structured decision-making for engagement actions
 // including replies and endorsements.
 func (tm *TwitterManager) decideTwitterActions(state *state.State) (*TwitterActions, error) {
-	sessionInsights, exists := state.GetManagerData(insight.SessionInsights)
-	if !exists {
-		return nil, fmt.Errorf("session insights not found")
-	}
-	actorInsights, exists := state.GetManagerData(insight.ActorInsights)
-	if !exists {
-		return nil, fmt.Errorf("actor insights not found")
-	}
-	uniqueInsights, exists := state.GetManagerData(insight.UniqueInsights)
-	if !exists {
-		return nil, fmt.Errorf("unique insights not found")
-	}
-	basePersonality, exists := state.GetManagerData(personality.BasePersonality)
-	if !exists {
-		return nil, fmt.Errorf("base personality not found")
-	}
+	// 	sessionInsights, exists := state.GetManagerData(insight.SessionInsights)
+	// 	if !exists {
+	// 		return nil, fmt.Errorf("session insights not found")
+	// 	}
+	// 	actorInsights, exists := state.GetManagerData(insight.ActorInsights)
+	// 	if !exists {
+	// 		return nil, fmt.Errorf("actor insights not found")
+	// 	}
+	// 	uniqueInsights, exists := state.GetManagerData(insight.UniqueInsights)
+	// 	if !exists {
+	// 		return nil, fmt.Errorf("unique insights not found")
+	// 	}
+	// 	basePersonality, exists := state.GetManagerData(personality.BasePersonality)
+	// 	if !exists {
+	// 		return nil, fmt.Errorf("base personality not found")
+	// 	}
+	// 	sessionInsights, exists := state.GetManagerData(insight.SessionInsights)
+	// 	if !exists {
+	// 		return nil, fmt.Errorf("session insights not found")
+	// 	}
+	// 	actorInsights, exists := state.GetManagerData(insight.ActorInsights)
+	// 	if !exists {
+	// 		return nil, fmt.Errorf("actor insights not found")
+	// 	}
+	// 	uniqueInsights, exists := state.GetManagerData(insight.UniqueInsights)
+	// 	if !exists {
+	// 		return nil, fmt.Errorf("unique insights not found")
+	// 	}
+	// 	basePersonality, exists := state.GetManagerData(personality.BasePersonality)
+	// 	if !exists {
+	// 		return nil, fmt.Errorf("base personality not found")
+	// 	}
 
-	var actions TwitterActions
-	err := tm.LLM.GenerateStructuredOutput(llm.StructuredOutputRequest{
-		Messages: []llm.Message{
-			llm.NewSystemMessage(`You are an AI that decides which Twitter actions to take based on context and personality. Be thoughtful and deliberate in your decisions.
-Guidelines:
-1. Tweet if a direct response is warranted
-2. Like if showing appreciation or acknowledgment is appropriate
-3. Can select any combination of the actions, or none at all
+	// 	var actions TwitterActions
+	// 	err := tm.LLM.GenerateStructuredOutput(llm.StructuredOutputRequest{
+	// 		Messages: []llm.Message{
+	// 			llm.NewSystemMessage(`You are an AI that decides which Twitter actions to take based on context and personality. Be thoughtful and deliberate in your decisions.
+	// Guidelines:
+	// 1. Tweet if a direct response is warranted
+	// 2. Like if showing appreciation or acknowledgment is appropriate
+	// 3. Can select any combination of the actions, or none at all
+	// 	var actions TwitterActions
+	// 	err := tm.LLM.GenerateStructuredOutput(llm.StructuredOutputRequest{
+	// 		Messages: []llm.Message{
+	// 			llm.NewSystemMessage(`You are an AI that decides which Twitter actions to take based on context and personality. Be thoughtful and deliberate in your decisions.
+	// Guidelines:
+	// 1. Tweet if a direct response is warranted
+	// 2. Like if showing appreciation or acknowledgment is appropriate
+	// 3. Can select any combination of the actions, or none at all
 
-Task:
-Decide which actions to take based on the above guidelines and the following context.
+	// Task:
+	// Decide which actions to take based on the above guidelines and the following context.
+	// Task:
+	// Decide which actions to take based on the above guidelines and the following context.
 
-Your personality context:
-` + fmt.Sprintf("%v", basePersonality) + `
+	// Your personality context:
+	// ` + fmt.Sprintf("%v", basePersonality) + `
+	// Your personality context:
+	// ` + fmt.Sprintf("%v", basePersonality) + `
 
-Tweet thread insights (session = conversation):
-` + fmt.Sprintf("%v", sessionInsights) + `
+	// Tweet thread insights (session = conversation):
+	// ` + fmt.Sprintf("%v", sessionInsights) + `
+	// Tweet thread insights (session = conversation):
+	// ` + fmt.Sprintf("%v", sessionInsights) + `
 
-User insights (actor = user):
-` + fmt.Sprintf("%v", actorInsights) + `
+	// User insights (actor = user):
+	// ` + fmt.Sprintf("%v", actorInsights) + `
+	// User insights (actor = user):
+	// ` + fmt.Sprintf("%v", actorInsights) + `
 
-Unique insights:
-` + fmt.Sprintf("%v", uniqueInsights)),
-		},
-		ModelType:    llm.ModelTypeAdvanced,
-		SchemaName:   "twitter_actions",
-		StrictSchema: true,
-	}, &actions)
+	// Unique insights:
+	// ` + fmt.Sprintf("%v", uniqueInsights)),
+	// 		},
+	// 		ModelType:    llm.ModelTypeAdvanced,
+	// 		SchemaName:   "twitter_actions",
+	// 		StrictSchema: true,
+	// 	}, &actions)
+	// Unique insights:
+	// ` + fmt.Sprintf("%v", uniqueInsights)),
+	// 		},
+	// 		ModelType:    llm.ModelTypeAdvanced,
+	// 		SchemaName:   "twitter_actions",
+	// 		StrictSchema: true,
+	// 	}, &actions)
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to get LLM decision: %w", err)
-	}
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("failed to get LLM decision: %w", err)
+	// 	}
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("failed to get LLM decision: %w", err)
+	// 	}
 
-	return &actions, nil
+	// return &actions, nil
+	return &TwitterActions{
+		ShouldTweet: true,
+	}, nil
 }
 
 // sendTweet executes Twitter API operations and maintains local state consistency.
@@ -361,9 +402,13 @@ Unique insights:
 // 2. Metadata synchronization with response data
 // 3. Local fragment identifier alignment
 func (tm *TwitterManager) sendTweet(response *db.Fragment, parsedTweet *twitter.ParsedTweet) error {
-	tweet, err := tm.twitterClient.CreateTweet(response.Content, &twitter.TweetOptions{
-		ReplyToTweetID: parsedTweet.InReplyToTweetID,
-	})
+	options := &twitter.TweetOptions{}
+
+	if len(parsedTweet.InReplyToTweetID) > 0 {
+		options.ReplyToTweetID = parsedTweet.InReplyToTweetID
+	}
+
+	tweet, err := tm.twitterClient.CreateTweet(response.Content, options)
 	if err != nil {
 		return fmt.Errorf("failed to send tweet: %w", err)
 	}

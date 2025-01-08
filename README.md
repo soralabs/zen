@@ -120,6 +120,71 @@ The project follows a clean, modular architecture:
 
 - `engine`: Core conversation engine
 - `manager`: Plugin manager system
+- `managers/*`: Built-in manager implementations
 - `state`: Shared state management
 - `llm`: LLM provider interfaces
+- `stores`: Data storage implementations
+- `tools/*`: Built-in tool implementations
 - `examples/`: Reference implementations
+
+## Using Zen as a Module
+
+1. Add Zen to your Go project:
+```bash
+go get github.com/soralabs/zen
+```
+
+2. Import Zen in your code:
+```go
+import (
+  "github.com/soralabs/zen/engine"
+  "github.com/soralabs/zen/llm"
+  "github.com/soralabs/zen/manager"
+  "github.com/soralabs/zen/managers/personality"
+  "github.com/soralabs/zen/managers/insight"
+  ... etc
+)
+```
+
+3. Basic usage example:
+```go
+// Initialize LLM client
+llmClient, err := llm.NewLLMClient(llm.Config{
+  ProviderType: llm.ProviderOpenAI,
+  APIKey: os.Getenv("OPENAI_API_KEY"),
+  ModelConfig: map[llm.ModelType]string{
+    llm.ModelTypeDefault: openai.GPT4,
+  },
+  Logger: logger,
+  Context: ctx,
+})
+
+// Create engine instance
+engine, err := engine.New(
+  engine.WithContext(ctx),
+  engine.WithLogger(logger),
+  engine.WithDB(db),
+  engine.WithLLM(llmClient),
+)
+
+// Process input
+state, err := engine.NewState(actorID, sessionID, "Your input text here")
+if err != nil {
+  log.Fatal(err)
+}
+
+response, err := engine.Process(state)
+if err != nil {
+  log.Fatal(err)
+}
+```
+
+4. Available packages:
+- `zen/engine`: Core conversation engine
+- `zen/llm`: LLM provider interfaces and implementations
+- `zen/manager`: Base manager system
+- `zen/managers/*`: Built-in manager implementations
+- `zen/state`: State management utilities
+- `zen/stores`: Data storage implementations
+
+For detailed examples, see the `examples/` directory in the repository.
