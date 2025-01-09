@@ -181,7 +181,9 @@ func (k *Twitter) handleTweetProcessing(tweet *twitter.ParsedTweet) error {
 	if err != nil {
 		return fmt.Errorf("failed to create state: %w", err)
 	}
-	currentState.AddCustomData("platform", "twitter")
+
+	currentState.AddCustomData("agent_twitter_username", k.twitterConfig.Credentials.User)
+	currentState.AddCustomData("agent_name", k.assistant.Name)
 
 	if err := k.assistant.Process(currentState); err != nil {
 		return fmt.Errorf("failed to process message: %w", err)
@@ -191,10 +193,6 @@ func (k *Twitter) handleTweetProcessing(tweet *twitter.ParsedTweet) error {
 	if err := k.assistant.UpdateState(currentState); err != nil {
 		return fmt.Errorf("failed to update state: %w", err)
 	}
-
-	currentState.AddCustomData("platform", "twitter")
-	currentState.AddCustomData("agent_twitter_username", k.twitterConfig.Credentials.User)
-	currentState.AddCustomData("agent_name", k.assistant.Name)
 
 	// create response message
 	response, err := k.generateTweetResponse(currentState, tweet)

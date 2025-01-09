@@ -73,18 +73,24 @@ func (s *State) SetManagersToPostProcess(managerIDs ...id.ManagerID) *State {
 	return s
 }
 
-// ShouldProcessManager checks if a manager should be executed during Process
+// ShouldProcessManager checks if a manager should be executed during Process.
+// Returns true if:
+// 1. No specific managers were set (meaning process all)
+// 2. The manager ID is in the process list
 func (s *State) ShouldProcessManager(managerID id.ManagerID) bool {
-	// If no managers are specified, execute all
+	// If no managers specified, process all
 	if len(s.managerExecution.processManagers) == 0 {
 		return true
 	}
 	return s.managerExecution.processManagers[managerID]
 }
 
-// ShouldPostProcessManager checks if a manager should be executed during PostProcess
+// ShouldPostProcessManager checks if a manager should be executed during PostProcess.
+// Returns true if:
+// 1. No specific managers were set (meaning process all)
+// 2. The manager ID is in the post-process list
 func (s *State) ShouldPostProcessManager(managerID id.ManagerID) bool {
-	// If no managers are specified, execute all
+	// If no managers specified, process all
 	if len(s.managerExecution.postProcessManagers) == 0 {
 		return true
 	}
