@@ -2,6 +2,7 @@ package personality
 
 import (
 	"github.com/soralabs/zen/db"
+	"github.com/soralabs/zen/id"
 	"github.com/soralabs/zen/manager"
 	"github.com/soralabs/zen/options"
 	"github.com/soralabs/zen/state"
@@ -37,13 +38,13 @@ func NewPersonalityManager(
 }
 
 // GetID returns the manager's unique identifier
-func (pm *PersonalityManager) GetID() manager.ManagerID {
+func (pm *PersonalityManager) GetID() id.ManagerID {
 	return manager.PersonalityManagerID
 }
 
 // GetDependencies returns an empty slice as PersonalityManager has no dependencies
-func (pm *PersonalityManager) GetDependencies() []manager.ManagerID {
-	return []manager.ManagerID{}
+func (pm *PersonalityManager) GetDependencies() []id.ManagerID {
+	return []id.ManagerID{}
 }
 
 // Process analyzes messages for personality-relevant information

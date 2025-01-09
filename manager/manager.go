@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/soralabs/zen/db"
+	"github.com/soralabs/zen/id"
 	"github.com/soralabs/zen/state"
 
 	"github.com/soralabs/zen/cache"
@@ -12,13 +13,13 @@ import (
 )
 
 // GetID returns the base manager identifier
-func (bm *BaseManager) GetID() ManagerID {
+func (bm *BaseManager) GetID() id.ManagerID {
 	return BaseManagerID
 }
 
 // GetDependencies returns an empty dependency list for the base manager
-func (bm *BaseManager) GetDependencies() []ManagerID {
-	return []ManagerID{}
+func (bm *BaseManager) GetDependencies() []id.ManagerID {
+	return []id.ManagerID{}
 }
 
 // Process provides a default implementation that panics

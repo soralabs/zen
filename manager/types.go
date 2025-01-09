@@ -33,10 +33,10 @@ type EventCallbackFunc func(eventData EventData) error
 // It provides methods for state management, execution, and event handling
 type Manager interface {
 	// GetID returns the unique identifier for this manager
-	GetID() ManagerID
+	GetID() id.ManagerID
 
 	// GetDependencies returns a list of other manager IDs that this manager depends on
-	GetDependencies() []ManagerID
+	GetDependencies() []id.ManagerID
 
 	// Process performs analysis on the current state
 	// This is called explicitly by the agent during message processing
@@ -64,9 +64,6 @@ type Manager interface {
 	// triggerEvent sends an event to the registered handler
 	triggerEvent(eventData EventData)
 }
-
-// ManagerID is a unique identifier for manager instances
-type ManagerID string
 
 // BaseManager provides common functionality for all manager implementations
 type BaseManager struct {

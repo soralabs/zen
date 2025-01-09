@@ -10,6 +10,9 @@ var namespaceUUID = uuid.NewSHA1(uuid.NameSpaceOID, []byte(namespace))
 
 type ID string
 
+// ManagerID is a unique identifier for manager instances
+type ManagerID string
+
 func New() ID {
 	id := uuid.New()
 	return ID(id.String())

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/soralabs/zen/db"
+	"github.com/soralabs/zen/id"
 	"github.com/soralabs/zen/internal/utils"
 	"github.com/soralabs/zen/manager"
 	"github.com/soralabs/zen/options"
@@ -39,7 +40,7 @@ func NewTwitterManager(
 }
 
 // GetID returns the manager's unique identifier
-func (tm *TwitterManager) GetID() manager.ManagerID {
+func (tm *TwitterManager) GetID() id.ManagerID {
 	return manager.TwitterManagerID
 }
 
@@ -47,8 +48,8 @@ func (tm *TwitterManager) GetID() manager.ManagerID {
 // Dependencies include:
 // - InsightManagerID: For accessing conversation and user insights
 // - PersonalityManagerID: For maintaining consistent personality in responses
-func (tm *TwitterManager) GetDependencies() []manager.ManagerID {
-	return []manager.ManagerID{manager.InsightManagerID, manager.PersonalityManagerID}
+func (tm *TwitterManager) GetDependencies() []id.ManagerID {
+	return []id.ManagerID{manager.InsightManagerID, manager.PersonalityManagerID}
 }
 
 // Process processes incoming tweets and builds conversation context.
@@ -57,14 +58,6 @@ func (tm *TwitterManager) GetDependencies() []manager.ManagerID {
 // 2. Decodes tweet metadata from the message
 // 3. Reconstructs and stores the conversation thread
 func (tm *TwitterManager) Process(state *state.State) error {
-	// Only process Twitter messages
-	// TODO: instead of doing custom data to see, maybe in the state, we can define what managers to process
-	// and what managers to post process
-	platform, ok := state.GetCustomData("platform")
-	if !ok || platform != "twitter" {
-		return nil
-	}
-
 	tm.Logger.Infof("Executing twitter analysis")
 
 	var metadata twitter.ParsedTweet
@@ -89,12 +82,6 @@ func (tm *TwitterManager) Process(state *state.State) error {
 // 3. Determining appropriate actions (tweet, like, etc.)
 // 4. Executing the decided actions
 func (tm *TwitterManager) PostProcess(state *state.State) error {
-	// Only process Twitter actions
-	platform, ok := state.GetCustomData("platform")
-	if !ok || platform != "twitter" {
-		return nil
-	}
-
 	tm.Logger.Infof("Executing twitter action")
 
 	response := state.Output

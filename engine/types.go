@@ -27,7 +27,7 @@ type Engine struct {
 
 	// State management
 	managers     []manager.Manager
-	managerOrder []manager.ManagerID
+	managerOrder []id.ManagerID
 
 	// stores
 	actorStore   *stores.ActorStore

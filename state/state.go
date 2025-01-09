@@ -1,5 +1,7 @@
 package state
 
+import "github.com/soralabs/zen/id"
+
 // Package state provides core functionality for managing conversation state and context
 // in the agent system. It handles both structured manager data and custom runtime data,
 // while providing methods for state manipulation and template-based prompt generation.
@@ -51,4 +53,40 @@ func (s *State) GetCustomData(key string) (interface{}, bool) {
 func (s *State) Reset() {
 	s.managerData = make(map[StateDataKey]interface{})
 	s.customData = make(map[string]interface{})
+}
+
+// SetManagersToProcess specifies which managers should be executed during Process
+func (s *State) SetManagersToProcess(managerIDs ...id.ManagerID) *State {
+	s.managerExecution.processManagers = make(map[id.ManagerID]bool)
+	for _, id := range managerIDs {
+		s.managerExecution.processManagers[id] = true
+	}
+	return s
+}
+
+// SetManagersToPostProcess specifies which managers should be executed during PostProcess
+func (s *State) SetManagersToPostProcess(managerIDs ...id.ManagerID) *State {
+	s.managerExecution.postProcessManagers = make(map[id.ManagerID]bool)
+	for _, id := range managerIDs {
+		s.managerExecution.postProcessManagers[id] = true
+	}
+	return s
+}
+
+// ShouldProcessManager checks if a manager should be executed during Process
+func (s *State) ShouldProcessManager(managerID id.ManagerID) bool {
+	// If no managers are specified, execute all
+	if len(s.managerExecution.processManagers) == 0 {
+		return true
+	}
+	return s.managerExecution.processManagers[managerID]
+}
+
+// ShouldPostProcessManager checks if a manager should be executed during PostProcess
+func (s *State) ShouldPostProcessManager(managerID id.ManagerID) bool {
+	// If no managers are specified, execute all
+	if len(s.managerExecution.postProcessManagers) == 0 {
+		return true
+	}
+	return s.managerExecution.postProcessManagers[managerID]
 }

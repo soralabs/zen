@@ -75,13 +75,17 @@ func (e *Engine) Process(currentState *state.State) error {
 
 	var errGroup errgroup.Group
 	for _, manager := range e.managers {
+		if !currentState.ShouldProcessManager(manager.GetID()) {
+			continue
+		}
+		manager := manager // Create new variable for goroutine
 		errGroup.Go(func() error {
 			return manager.Process(currentState)
 		})
 	}
 
 	if err := errGroup.Wait(); err != nil {
-		return fmt.Errorf("failed to manager execute analysis: %w", err)
+		return fmt.Errorf("failed to execute manager analysis: %w", err)
 	}
 
 	if err := e.interactionFragmentStore.Upsert(inputCopy); err != nil {
@@ -125,7 +129,10 @@ func (e *Engine) PostProcess(response *db.Fragment, currentState *state.State) e
 
 	currentState.Output = responseCopy
 
-	if err := e.executeManagersInOrder(currentState, func(m manager.Manager) error {
+	if err := e.executeManagersInOrder(func(m manager.Manager) error {
+		if !currentState.ShouldPostProcessManager(m.GetID()) {
+			return nil
+		}
 		return m.PostProcess(currentState)
 	}); err != nil {
 		return fmt.Errorf("failed to execute manager actions: %w", err)
@@ -206,7 +213,7 @@ func (e *Engine) AddManager(newManager manager.Manager) error {
 	}
 
 	// Check dependencies
-	available := make(map[manager.ManagerID]bool)
+	available := make(map[id.ManagerID]bool)
 	for _, m := range e.managers {
 		available[m.GetID()] = true
 	}
@@ -227,9 +234,9 @@ func (e *Engine) AddManager(newManager manager.Manager) error {
 // 2. Uses managerOrder if specified, otherwise uses registration order
 // 3. Executes each manager with the provided function
 // Returns an error if any manager execution fails.
-func (e *Engine) executeManagersInOrder(currentState *state.State, executeFn func(manager.Manager) error) error {
+func (e *Engine) executeManagersInOrder(executeFn func(manager.Manager) error) error {
 	// Create a map for quick manager lookup
-	managerMap := make(map[manager.ManagerID]manager.Manager)
+	managerMap := make(map[id.ManagerID]manager.Manager)
 	for _, m := range e.managers {
 		managerMap[m.GetID()] = m
 	}
@@ -237,7 +244,7 @@ func (e *Engine) executeManagersInOrder(currentState *state.State, executeFn fun
 	// If no order specified, use registration order
 	executionOrder := e.managerOrder
 	if len(executionOrder) == 0 {
-		executionOrder = make([]manager.ManagerID, len(e.managers))
+		executionOrder = make([]id.ManagerID, len(e.managers))
 		for i, m := range e.managers {
 			executionOrder[i] = m.GetID()
 		}

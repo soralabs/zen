@@ -98,7 +98,7 @@ func WithSessionStore(store *stores.SessionStore) options.Option[Engine] {
 func WithManagers(_managers ...manager.Manager) options.Option[Engine] {
 	return func(e *Engine) error {
 		// Create a map of available managers, checking for duplicates
-		available := make(map[manager.ManagerID]manager.Manager)
+		available := make(map[id.ManagerID]manager.Manager)
 		for _, m := range _managers {
 			id := m.GetID()
 			if _, exists := available[id]; exists {
@@ -122,10 +122,10 @@ func WithManagers(_managers ...manager.Manager) options.Option[Engine] {
 	}
 }
 
-func WithManagerOrder(order []manager.ManagerID) options.Option[Engine] {
+func WithManagerOrder(order []id.ManagerID) options.Option[Engine] {
 	return func(e *Engine) error {
 		// Verify all managers in order exist
-		managerMap := make(map[manager.ManagerID]bool)
+		managerMap := make(map[id.ManagerID]bool)
 		for _, m := range e.managers {
 			managerMap[m.GetID()] = true
 		}

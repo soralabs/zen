@@ -43,13 +43,13 @@ func NewInsightManager(
 }
 
 // GetID returns the manager's unique identifier
-func (im *InsightManager) GetID() manager.ManagerID {
+func (im *InsightManager) GetID() id.ManagerID {
 	return manager.InsightManagerID
 }
 
 // GetDependencies returns an empty slice as InsightManager has no dependencies
-func (im *InsightManager) GetDependencies() []manager.ManagerID {
-	return []manager.ManagerID{}
+func (im *InsightManager) GetDependencies() []id.ManagerID {
+	return []id.ManagerID{}
 }
 
 // ExecuteAnalysis performs analysis on the current message to extract new insights.

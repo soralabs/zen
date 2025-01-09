@@ -1,16 +1,18 @@
 package manager
 
+import "github.com/soralabs/zen/id"
+
 // Standard manager identifiers used throughout the system
 const (
 	// BaseManagerID represents the core manager implementation
-	BaseManagerID ManagerID = "base"
+	BaseManagerID id.ManagerID = "base"
 
 	// PersonalityManagerID handles agent personality and behavior traits
-	PersonalityManagerID ManagerID = "personality"
+	PersonalityManagerID id.ManagerID = "personality"
 
 	// InsightManagerID manages conversation and user insights
-	InsightManagerID ManagerID = "insight"
+	InsightManagerID id.ManagerID = "insight"
 
 	// TwitterManagerID handles Twitter-specific interactions
-	TwitterManagerID ManagerID = "twitter"
+	TwitterManagerID id.ManagerID = "twitter"
 )

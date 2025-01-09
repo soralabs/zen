@@ -4,6 +4,7 @@ import (
 	"html/template"
 
 	"github.com/soralabs/zen/db"
+	"github.com/soralabs/zen/id"
 	"github.com/soralabs/zen/llm"
 
 	toolkit "github.com/soralabs/toolkit/go"
@@ -37,6 +38,12 @@ type State struct {
 	// Manager-specific data storage
 	// Stores data provided by various managers keyed by StateDataKey
 	managerData map[StateDataKey]interface{}
+
+	// Manager execution configuration
+	managerExecution struct {
+		processManagers     map[id.ManagerID]bool
+		postProcessManagers map[id.ManagerID]bool
+	}
 
 	// Custom data storage for arbitrary key-value pairs
 	// Used for platform-specific or temporary data storage
