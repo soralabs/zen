@@ -258,7 +258,9 @@ func main() {
 			break
 		}
 
-		currentState, err := assistant.NewState(userID, sessionID, input)
+		currentState := state.NewState()
+
+		err = assistant.PopulateState(currentState, userID, sessionID, input)
 		if err != nil {
 			log.Errorf("Failed to create state: %v", err)
 			continue
@@ -328,11 +330,12 @@ func main() {
 		templateBuilder.AddUserSection(input, "")
 
 		// Add manager data
-		templateBuilder.WithManagerData(personality.BasePersonality)
-		templateBuilder.WithManagerData(insight.SessionInsights)
-		templateBuilder.WithManagerData(insight.ActorInsights)
-		templateBuilder.WithManagerData(insight.UniqueInsights)
-		templateBuilder.WithToolkit(randomToolKit)
+		templateBuilder = templateBuilder.
+			WithManagerData(personality.BasePersonality).
+			WithManagerData(insight.SessionInsights).
+			WithManagerData(insight.ActorInsights).
+			WithManagerData(insight.UniqueInsights).
+			WithToolkit(randomToolKit)
 
 		tools := templateBuilder.GetTools()
 

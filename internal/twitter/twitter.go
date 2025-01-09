@@ -177,13 +177,13 @@ func (k *Twitter) handleTweetProcessing(tweet *twitter.ParsedTweet) error {
 		return fmt.Errorf("failed to create tweet fragment: %w", err)
 	}
 
-	currentState, err := k.assistant.NewStateFromFragment(tweetFragment)
-	if err != nil {
+	currentState := state.NewState().
+		AddCustomData("agent_twitter_username", k.twitterConfig.Credentials.User).
+		AddCustomData("agent_name", k.assistant.Name)
+
+	if err := k.assistant.PopulateStateFromFragment(currentState, tweetFragment); err != nil {
 		return fmt.Errorf("failed to create state: %w", err)
 	}
-
-	currentState.AddCustomData("agent_twitter_username", k.twitterConfig.Credentials.User)
-	currentState.AddCustomData("agent_name", k.assistant.Name)
 
 	if err := k.assistant.Process(currentState); err != nil {
 		return fmt.Errorf("failed to process message: %w", err)

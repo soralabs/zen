@@ -13,22 +13,20 @@ import (
 
 // NewState creates a new State instance with the provided options.
 // It initializes an empty state and applies any provided configuration options.
-func (e *Engine) NewStateFromFragment(fragment *db.Fragment) (*state.State, error) {
-	state := state.NewState()
+func (e *Engine) PopulateStateFromFragment(state *state.State, fragment *db.Fragment) error {
 	state.Input = fragment
 	if err := e.UpdateState(state); err != nil {
-		return nil, fmt.Errorf("failed to create state: %w", err)
+		return fmt.Errorf("failed to create state: %w", err)
 	}
-	return state, nil
+	return nil
 }
 
-func (e *Engine) NewState(actorId, sessionId id.ID, input string) (*state.State, error) {
+func (e *Engine) PopulateState(state *state.State, actorId, sessionId id.ID, input string) error {
 	embedding, err := e.llmClient.EmbedText(input)
 	if err != nil {
-		return nil, fmt.Errorf("failed to embed text: %w", err)
+		return fmt.Errorf("failed to embed text: %w", err)
 	}
 
-	state := state.NewState()
 	state.Input = &db.Fragment{
 		ID:        id.New(),
 		ActorID:   actorId,
@@ -41,10 +39,10 @@ func (e *Engine) NewState(actorId, sessionId id.ID, input string) (*state.State,
 	}
 
 	if err := e.UpdateState(state); err != nil {
-		return nil, fmt.Errorf("failed to create state: %w", err)
+		return fmt.Errorf("failed to create state: %w", err)
 	}
 
-	return state, nil
+	return nil
 }
 
 // UpdateState applies the provided options and collects manager data
