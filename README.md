@@ -1,7 +1,7 @@
 # Zen - An Advanced Conversational LLM Framework
 
 <div align="center">
-  <img src="./img/banner_sora.png" alt="Sora Banner" width="100%" />
+  <img src="./img/sora_readme_banner.png" alt="Sora Banner" width="100%" />
 </div>
 
 ## Table of Contents
