@@ -182,19 +182,18 @@ func (p *OpenAIProvider) getModel(modelType ModelType) string {
 // convertMessages transforms internal message format to OpenAI API format.
 func (p *OpenAIProvider) convertMessages(messages []Message) []openai.ChatCompletionMessage {
 	converted := make([]openai.ChatCompletionMessage, len(messages))
-	for _, msg := range messages {
-		conv := openai.ChatCompletionMessage{
+	for i, msg := range messages {
+		converted[i] = openai.ChatCompletionMessage{
 			Role:    p.mapRole(msg.Role),
 			Content: msg.Content,
 			Name:    msg.Name,
 		}
 		if msg.ToolCall != nil {
-			conv.FunctionCall = &openai.FunctionCall{
+			converted[i].FunctionCall = &openai.FunctionCall{
 				Name:      msg.ToolCall.Name,
 				Arguments: msg.ToolCall.Arguments,
 			}
 		}
-		converted = append(converted, conv)
 	}
 	return converted
 }
