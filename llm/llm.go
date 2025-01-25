@@ -21,6 +21,8 @@ func NewLLMClient(config Config) (*LLMClient, error) {
 	switch config.ProviderType {
 	case ProviderOpenAI:
 		provider = NewOpenAIProvider(config)
+	case ProviderDeepseek:
+		provider = NewDeepseekProvider(config)
 	default:
 		return nil, fmt.Errorf("unsupported provider type: %s", config.ProviderType)
 	}

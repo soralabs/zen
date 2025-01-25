@@ -10,7 +10,8 @@ import (
 type ProviderType string
 
 const (
-	ProviderOpenAI ProviderType = "openai"
+	ProviderOpenAI   ProviderType = "openai"
+	ProviderDeepseek ProviderType = "deepseek"
 )
 
 // Config holds the configuration for an LLM provider
