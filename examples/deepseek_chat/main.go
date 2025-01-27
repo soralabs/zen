@@ -49,8 +49,8 @@ func main() {
 			Type:   llm.ProviderDeepseek,
 			APIKey: os.Getenv("DEEPSEEK_API_KEY"),
 			ModelConfig: map[llm.ModelType]string{
-				llm.ModelTypeFast:     deepseek.DeepSeekChat,
-				llm.ModelTypeDefault:  deepseek.DeepSeekChat,
+				llm.ModelTypeFast:     deepseek.DeepSeekReasoner,
+				llm.ModelTypeDefault:  deepseek.DeepSeekReasoner,
 				llm.ModelTypeAdvanced: deepseek.DeepSeekReasoner,
 			},
 		},
@@ -68,7 +68,7 @@ func main() {
 	personalityFragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTablePersonality)
 
 	// Create a user
-	userID := id.FromString("user")
+	userID := id.FromString("user_deepseek")
 	err = actorStore.Upsert(&db.Actor{
 		ID:   userID,
 		Name: "User",
@@ -78,7 +78,7 @@ func main() {
 	}
 
 	// Create an agent
-	agentID := id.FromString("agent")
+	agentID := id.FromString("agent_deepseek")
 	agentName := "agent"
 	err = actorStore.Upsert(&db.Actor{
 		ID:        agentID,
@@ -90,7 +90,7 @@ func main() {
 	}
 
 	// Create a conversation
-	sessionID := id.FromString("session")
+	sessionID := id.FromString("session_deepseek")
 	err = sessionStore.Upsert(&db.Session{
 		ID: sessionID,
 	})

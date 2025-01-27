@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
+	"time"
 
-	"github.com/cohesion-org/deepseek-go"
-	"github.com/cohesion-org/deepseek-go/constants"
+	"github.com/go-resty/resty/v2"
 	"github.com/soralabs/zen/logger"
 )
 
 type DeepseekProvider struct {
-	client *deepseek.Client
+	client *resty.Client
 	models map[ModelType]string
 	logger *logger.Logger
 	roles  map[Role]string
@@ -25,42 +26,93 @@ func NewDeepseekProvider(config Config) *DeepseekProvider {
 	models := config.DefaultProvider.ModelConfig
 	if models == nil {
 		models = map[ModelType]string{
-			ModelTypeFast:     deepseek.DeepSeekChat,
-			ModelTypeDefault:  deepseek.DeepSeekChat,
-			ModelTypeAdvanced: deepseek.DeepSeekReasoner,
+			ModelTypeFast:     "deepseek-chat",
+			ModelTypeDefault:  "deepseek-chat",
+			ModelTypeAdvanced: "deepseek-reasoner",
 		}
 	}
 
 	// Role mapping
 	roles := map[Role]string{
-		RoleSystem:    constants.ChatMessageRoleSystem,
-		RoleUser:      constants.ChatMessageRoleUser,
-		RoleAssistant: constants.ChatMessageRoleAssistant,
+		RoleSystem:    "system",
+		RoleUser:      "user",
+		RoleAssistant: "assistant",
 		RoleTool:      "tool",
 	}
 
+	client := resty.New().
+		SetBaseURL("https://api.deepseek.com/v1").
+		SetHeader("Authorization", fmt.Sprintf("Bearer %s", config.DefaultProvider.APIKey)).
+		SetHeader("Content-Type", "application/json").
+		SetTimeout(2 * time.Minute)
+
 	return &DeepseekProvider{
-		client: deepseek.NewClient(config.DefaultProvider.APIKey),
+		client: client,
 		models: models,
 		logger: config.Logger,
 		roles:  roles,
 	}
 }
 
+type deepseekChatCompletionRequest struct {
+	Model            string                  `json:"model"`
+	Messages         []deepseekMessage       `json:"messages"`
+	Temperature      float32                 `json:"temperature,omitempty"`
+	Tools            []deepseekTool          `json:"tools,omitempty"`
+	ResponseFormat   *deepseekResponseFormat `json:"response_format,omitempty"`
+	ReasoningContent string                  `json:"reasoning_content,omitempty"`
+}
+
+type deepseekMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+	Name    string `json:"name,omitempty"`
+}
+
+type deepseekTool struct {
+	Type     string           `json:"type"`
+	Function deepseekFunction `json:"function"`
+}
+
+type deepseekFunction struct {
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Parameters  interface{} `json:"parameters"`
+}
+
+type deepseekResponseFormat struct {
+	Type string `json:"type"`
+}
+
+type deepseekChatCompletionResponse struct {
+	ID      string `json:"id"`
+	Object  string `json:"object"`
+	Created int64  `json:"created"`
+	Model   string `json:"model"`
+	Choices []struct {
+		Message struct {
+			Role             string `json:"role"`
+			Content          string `json:"content"`
+			ReasoningContent string `json:"reasoning_content,omitempty"`
+		} `json:"message"`
+		FinishReason string `json:"finish_reason"`
+	} `json:"choices"`
+}
+
 // GenerateCompletion sends a conversation to the Deepseek Chat API
 // and returns the model's text completion.
 func (p *DeepseekProvider) GenerateCompletion(ctx context.Context, req CompletionRequest) (Message, error) {
-	tools := make([]deepseek.Tools, len(req.Tools))
+	tools := make([]deepseekTool, len(req.Tools))
 	for i, tool := range req.Tools {
 		schema := tool.GetSchema()
-		params := &deepseek.Parameters{}
-		if err := json.Unmarshal(schema.Parameters, params); err != nil {
+		var params interface{}
+		if err := json.Unmarshal(schema.Parameters, &params); err != nil {
 			return Message{}, fmt.Errorf("failed to parse tool parameters: %w", err)
 		}
 
-		tools[i] = deepseek.Tools{
+		tools[i] = deepseekTool{
 			Type: "function",
-			Function: deepseek.Function{
+			Function: deepseekFunction{
 				Name:        tool.GetName(),
 				Description: tool.GetDescription(),
 				Parameters:  params,
@@ -69,18 +121,43 @@ func (p *DeepseekProvider) GenerateCompletion(ctx context.Context, req Completio
 	}
 
 	messages := p.convertMessages(req.Messages)
-	chatReq := deepseek.ChatCompletionRequest{
+	chatReq := deepseekChatCompletionRequest{
 		Model:       p.getModel(req.ModelType),
 		Messages:    messages,
 		Temperature: req.Temperature,
+		ResponseFormat: &deepseekResponseFormat{
+			Type: "text",
+		},
 	}
 	if len(tools) > 0 {
 		chatReq.Tools = tools
 	}
 
-	resp, err := p.client.CreateChatCompletion(ctx, &chatReq)
+	// Add reasoning_content for reasoner model
+	if p.getModel(req.ModelType) == "deepseek-reasoner" {
+		var reasoningContent string
+		for _, msg := range req.Messages {
+			if msg.Role == RoleUser {
+				reasoningContent = msg.Content
+				break
+			}
+		}
+		chatReq.ReasoningContent = reasoningContent
+	}
+
+	var resp deepseekChatCompletionResponse
+	httpResp, err := p.client.R().
+		SetContext(ctx).
+		SetBody(chatReq).
+		SetResult(&resp).
+		Post("/chat/completions")
+
 	if err != nil {
 		return Message{}, fmt.Errorf("Deepseek API error: %w", err)
+	}
+
+	if httpResp.StatusCode() != http.StatusOK {
+		return Message{}, fmt.Errorf("Deepseek API error: %s", httpResp.String())
 	}
 
 	if len(resp.Choices) == 0 {
@@ -88,6 +165,11 @@ func (p *DeepseekProvider) GenerateCompletion(ctx context.Context, req Completio
 	}
 
 	choice := resp.Choices[0]
+	if choice.Message.ReasoningContent != "" {
+		p.logger.WithFields(map[string]interface{}{
+			"reasoning": choice.Message.ReasoningContent,
+		}).Info("Reasoning output")
+	}
 	toolCall := p.extractToolCall(choice.Message.Content)
 	if toolCall != nil {
 		for _, tool := range req.Tools {
@@ -165,18 +247,28 @@ func (p *DeepseekProvider) GenerateStructuredOutput(ctx context.Context, req Str
 	}
 	messages := append([]Message{systemMessage}, req.Messages...)
 
-	chatReq := deepseek.ChatCompletionRequest{
+	chatReq := deepseekChatCompletionRequest{
 		Model:       p.getModel(req.ModelType),
 		Messages:    p.convertMessages(messages),
 		Temperature: req.Temperature,
-		ResponseFormat: &deepseek.ResponseFormat{
+		ResponseFormat: &deepseekResponseFormat{
 			Type: "json_object",
 		},
 	}
 
-	resp, err := p.client.CreateChatCompletion(ctx, &chatReq)
+	var resp deepseekChatCompletionResponse
+	httpResp, err := p.client.R().
+		SetContext(ctx).
+		SetBody(chatReq).
+		SetResult(&resp).
+		Post("/chat/completions")
+
 	if err != nil {
 		return fmt.Errorf("StructuredOutput Deepseek API error: %w", err)
+	}
+
+	if httpResp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("StructuredOutput Deepseek API error: %s", httpResp.String())
 	}
 
 	if len(resp.Choices) == 0 {
@@ -188,8 +280,7 @@ func (p *DeepseekProvider) GenerateStructuredOutput(ctx context.Context, req Str
 
 // EmbedText generates an embedding vector for the given text using Deepseek's embedding model
 func (p *DeepseekProvider) EmbedText(ctx context.Context, text string) ([]float32, error) {
-	// TODO: Implement once embedding support is added to deepseek-go
-	return nil, fmt.Errorf("embeddings not yet supported by deepseek-go")
+	return nil, fmt.Errorf("embeddings not yet supported by Deepseek API")
 }
 
 // getModel returns the Deepseek model identifier for the given model type.
@@ -202,8 +293,8 @@ func (p *DeepseekProvider) getModel(modelType ModelType) string {
 }
 
 // convertMessages transforms internal message format to Deepseek API format.
-func (p *DeepseekProvider) convertMessages(messages []Message) []deepseek.ChatCompletionMessage {
-	converted := make([]deepseek.ChatCompletionMessage, len(messages))
+func (p *DeepseekProvider) convertMessages(messages []Message) []deepseekMessage {
+	converted := make([]deepseekMessage, len(messages))
 	for i, msg := range messages {
 		content := msg.Content
 		if msg.ToolCall != nil {
@@ -217,9 +308,10 @@ func (p *DeepseekProvider) convertMessages(messages []Message) []deepseek.ChatCo
 			}
 		}
 
-		converted[i] = deepseek.ChatCompletionMessage{
+		converted[i] = deepseekMessage{
 			Role:    p.mapRole(msg.Role),
 			Content: content,
+			Name:    msg.Name,
 		}
 	}
 	return converted
