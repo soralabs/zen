@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/cohesion-org/deepseek-go"
+	"github.com/cohesion-org/deepseek-go/constants"
 	"github.com/soralabs/zen/logger"
 )
 
@@ -20,7 +22,7 @@ type DeepseekProvider struct {
 // initializing a default mapping for models and roles if none are provided.
 func NewDeepseekProvider(config Config) *DeepseekProvider {
 	// Default model mapping if not provided
-	models := config.ModelConfig
+	models := config.DefaultProvider.ModelConfig
 	if models == nil {
 		models = map[ModelType]string{
 			ModelTypeFast:     deepseek.DeepSeekChat,
@@ -31,14 +33,14 @@ func NewDeepseekProvider(config Config) *DeepseekProvider {
 
 	// Role mapping
 	roles := map[Role]string{
-		RoleSystem:    "system",
-		RoleUser:      "user",
-		RoleAssistant: "assistant",
+		RoleSystem:    constants.ChatMessageRoleSystem,
+		RoleUser:      constants.ChatMessageRoleUser,
+		RoleAssistant: constants.ChatMessageRoleAssistant,
 		RoleTool:      "tool",
 	}
 
 	return &DeepseekProvider{
-		client: deepseek.NewClient(config.APIKey),
+		client: deepseek.NewClient(config.DefaultProvider.APIKey),
 		models: models,
 		logger: config.Logger,
 		roles:  roles,
@@ -151,9 +153,21 @@ func (p *DeepseekProvider) extractToolCall(content string) *ToolCall {
 
 // GenerateStructuredOutput prompts the Deepseek API to return JSON data
 func (p *DeepseekProvider) GenerateStructuredOutput(ctx context.Context, req StructuredOutputRequest, result interface{}) error {
+	resultType := reflect.TypeOf(result)
+	if resultType.Kind() == reflect.Ptr {
+		resultType = resultType.Elem()
+	}
+	description := fmt.Sprintf("The response should be a valid JSON object matching the following Go struct type: %s", resultType.String())
+
+	systemMessage := Message{
+		Role:    RoleSystem,
+		Content: description,
+	}
+	messages := append([]Message{systemMessage}, req.Messages...)
+
 	chatReq := deepseek.ChatCompletionRequest{
 		Model:       p.getModel(req.ModelType),
-		Messages:    p.convertMessages(req.Messages),
+		Messages:    p.convertMessages(messages),
 		Temperature: req.Temperature,
 		ResponseFormat: &deepseek.ResponseFormat{
 			Type: "json_object",
@@ -162,7 +176,7 @@ func (p *DeepseekProvider) GenerateStructuredOutput(ctx context.Context, req Str
 
 	resp, err := p.client.CreateChatCompletion(ctx, &chatReq)
 	if err != nil {
-		return fmt.Errorf("Deepseek API error: %w", err)
+		return fmt.Errorf("StructuredOutput Deepseek API error: %w", err)
 	}
 
 	if len(resp.Choices) == 0 {

@@ -22,7 +22,7 @@ type OpenAIProvider struct {
 // initializing a default mapping for models and roles if none are provided.
 func NewOpenAIProvider(config Config) *OpenAIProvider {
 	// Default model mapping if not provided
-	models := config.ModelConfig
+	models := config.DefaultProvider.ModelConfig
 	if models == nil {
 		models = map[ModelType]string{
 			ModelTypeFast:     openai.GPT4oMini,
@@ -40,7 +40,7 @@ func NewOpenAIProvider(config Config) *OpenAIProvider {
 	}
 
 	return &OpenAIProvider{
-		client: openai.NewClient(config.APIKey),
+		client: openai.NewClient(config.DefaultProvider.APIKey),
 		models: models,
 		logger: config.Logger,
 		roles:  roles,

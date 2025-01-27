@@ -7,23 +7,19 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
+	"github.com/cohesion-org/deepseek-go"
 	"github.com/joho/godotenv"
-	"github.com/sashabaranov/go-openai"
-	toolkit "github.com/soralabs/toolkit/go"
 	"github.com/soralabs/zen/db"
 	"github.com/soralabs/zen/engine"
 	"github.com/soralabs/zen/id"
 	"github.com/soralabs/zen/llm"
 	"github.com/soralabs/zen/logger"
 	"github.com/soralabs/zen/manager"
-	"github.com/soralabs/zen/managers/insight"
 	"github.com/soralabs/zen/managers/personality"
 	"github.com/soralabs/zen/options"
 	"github.com/soralabs/zen/state"
 	"github.com/soralabs/zen/stores"
-	random_tools "github.com/soralabs/zen/tools/random"
 )
 
 func main() {
@@ -50,13 +46,17 @@ func main() {
 	// Initialize LLM client
 	llmClient, err := llm.NewLLMClient(llm.Config{
 		DefaultProvider: llm.ProviderConfig{
+			Type:   llm.ProviderDeepseek,
+			APIKey: os.Getenv("DEEPSEEK_API_KEY"),
+			ModelConfig: map[llm.ModelType]string{
+				llm.ModelTypeFast:     deepseek.DeepSeekChat,
+				llm.ModelTypeDefault:  deepseek.DeepSeekChat,
+				llm.ModelTypeAdvanced: deepseek.DeepSeekReasoner,
+			},
+		},
+		EmbeddingProvider: &llm.ProviderConfig{
 			Type:   llm.ProviderOpenAI,
 			APIKey: os.Getenv("OPENAI_API_KEY"),
-			ModelConfig: map[llm.ModelType]string{
-				llm.ModelTypeFast:     openai.GPT4oMini,
-				llm.ModelTypeDefault:  openai.GPT4oMini,
-				llm.ModelTypeAdvanced: openai.GPT4o,
-			},
 		},
 		Logger:  log.NewSubLogger("llm", &logger.SubLoggerOpts{}),
 		Context: ctx,
@@ -66,14 +66,6 @@ func main() {
 	actorStore := stores.NewActorStore(ctx, database)
 	fragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTableInteraction)
 	personalityFragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTablePersonality)
-	insightFragmentStore := stores.NewFragmentStore(ctx, database, db.FragmentTableInsight)
-
-	randomToolKit := toolkit.NewToolkit("random_tools",
-		toolkit.WithToolkitDescription("A toolkit that include random generation"),
-		toolkit.WithTools(
-			random_tools.NewRandomNumberTool(),
-		),
-	)
 
 	// Create a user
 	userID := id.FromString("user")
@@ -104,23 +96,6 @@ func main() {
 	})
 	if err != nil {
 		log.Fatalf("Failed to create conversation: %v", err)
-	}
-
-	// Initialize insight manager
-	insightManager, err := insight.NewInsightManager(
-		[]options.Option[manager.BaseManager]{
-			manager.WithLogger(log.NewSubLogger("insight", &logger.SubLoggerOpts{})),
-			manager.WithContext(ctx),
-			manager.WithActorStore(actorStore),
-			manager.WithLLM(llmClient),
-			manager.WithSessionStore(sessionStore),
-			manager.WithFragmentStore(insightFragmentStore),
-			manager.WithInteractionFragmentStore(fragmentStore),
-			manager.WithAssistantDetails(agentName, agentID),
-		},
-	)
-	if err != nil {
-		log.Fatalf("Failed to create insight manager: %v", err)
 	}
 
 	personalityManager, err := personality.NewPersonalityManager(
@@ -237,7 +212,7 @@ func main() {
 		engine.WithSessionStore(sessionStore),
 		engine.WithActorStore(actorStore),
 		engine.WithInteractionFragmentStore(fragmentStore),
-		engine.WithManagers(insightManager, personalityManager),
+		engine.WithManagers(personalityManager),
 		engine.WithLLMClient(llmClient),
 	)
 	if err != nil {
@@ -281,8 +256,7 @@ func main() {
 				if f.Actor != nil {
 					actorName = f.Actor.Name
 				}
-				builder.WriteString(fmt.Sprintf("[%s] %s: %s\n",
-					time.Since(f.CreatedAt).Round(time.Second),
+				builder.WriteString(fmt.Sprintf("%s: %s\n",
 					actorName,
 					f.Content))
 			}
@@ -290,31 +264,31 @@ func main() {
 		})
 
 		templateBuilder.AddSystemSection(`Your Core Configuration:
-	{{.base_personality}}
-	
-	STRICT REQUIREMENTS:
-	1. You MUST embody your core configuration exactly - this defines who you are
-	2. Take into account the message and conversation examples of your configuration
-	3. You MUST consider the full conversation context and insights
-	4. You MUST NOT use @ mentions
-	5. You MUST NOT act like an assistant or ask questions
-	6. You MUST NOT offer assistance or guidance
-	7. You MUST respond naturally as a participant in the conversation
-	8. Keep responses concise and tweet-length appropriate
-	
-	Context for this conversation:
-	# Conversation Insights (session = conversation)
-	{{.session_insights}}
-	
-	# User Insights (actor = user)
-	{{.actor_insights}}
-	
-	# Unique Insights
-	{{.unique_insights}}
-	
-	# Relevant Interactions
-	{{formatInteractions .relevant_interactions}}
-	`)
+		{{.base_personality}}
+		
+		STRICT REQUIREMENTS:
+		1. You MUST embody your core configuration exactly - this defines who you are
+		2. Take into account the message and conversation examples of your configuration
+		3. You MUST consider the full conversation context and insights
+		4. You MUST NOT use @ mentions
+		5. You MUST NOT act like an assistant or ask questions
+		6. You MUST NOT offer assistance or guidance
+		7. You MUST respond naturally as a participant in the conversation
+		8. Keep responses concise and tweet-length appropriate
+		
+		Context for this conversation:
+		# Conversation Insights (session = conversation)
+		{{.session_insights}}
+		
+		# User Insights (actor = user)
+		{{.actor_insights}}
+		
+		# Unique Insights
+		{{.unique_insights}}
+		
+		# Relevant Interactions
+		{{formatInteractions .relevant_interactions}}
+		`)
 
 		// Add previous messages
 		for i := len(currentState.RecentInteractions) - 1; i >= 0; i-- {
@@ -329,15 +303,6 @@ func main() {
 		// Add current message
 		templateBuilder.AddUserSection(input, "")
 
-		// Add manager data
-		templateBuilder.WithManagerData(personality.BasePersonality)
-		templateBuilder.WithManagerData(insight.SessionInsights)
-		templateBuilder.WithManagerData(insight.ActorInsights)
-		templateBuilder.WithManagerData(insight.UniqueInsights)
-		templateBuilder.WithToolkit(randomToolKit)
-
-		tools := templateBuilder.GetTools()
-
 		messages, err := templateBuilder.Compose()
 		if err != nil {
 			log.Errorf("Failed to compose messages: %v", err)
@@ -345,7 +310,7 @@ func main() {
 		}
 
 		// Generate completion
-		responseFragment, err := assistant.GenerateResponse(messages, sessionID, tools...)
+		responseFragment, err := assistant.GenerateResponse(messages, sessionID)
 		if err != nil {
 			log.Errorf("Failed to generate response: %v", err)
 			continue
