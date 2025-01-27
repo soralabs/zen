@@ -90,7 +90,7 @@ func main() {
 	}
 
 	// Create a conversation
-	sessionID := id.FromString("session_deepseek")
+	sessionID := id.New()
 	err = sessionStore.Upsert(&db.Session{
 		ID: sessionID,
 	})

@@ -55,12 +55,11 @@ func NewDeepseekProvider(config Config) *DeepseekProvider {
 }
 
 type deepseekChatCompletionRequest struct {
-	Model            string                  `json:"model"`
-	Messages         []deepseekMessage       `json:"messages"`
-	Temperature      float32                 `json:"temperature,omitempty"`
-	Tools            []deepseekTool          `json:"tools,omitempty"`
-	ResponseFormat   *deepseekResponseFormat `json:"response_format,omitempty"`
-	ReasoningContent string                  `json:"reasoning_content,omitempty"`
+	Model          string                  `json:"model"`
+	Messages       []deepseekMessage       `json:"messages"`
+	Temperature    float32                 `json:"temperature,omitempty"`
+	Tools          []deepseekTool          `json:"tools,omitempty"`
+	ResponseFormat *deepseekResponseFormat `json:"response_format,omitempty"`
 }
 
 type deepseekMessage struct {
@@ -131,18 +130,6 @@ func (p *DeepseekProvider) GenerateCompletion(ctx context.Context, req Completio
 	}
 	if len(tools) > 0 {
 		chatReq.Tools = tools
-	}
-
-	// Add reasoning_content for reasoner model
-	if p.getModel(req.ModelType) == "deepseek-reasoner" {
-		var reasoningContent string
-		for _, msg := range req.Messages {
-			if msg.Role == RoleUser {
-				reasoningContent = msg.Content
-				break
-			}
-		}
-		chatReq.ReasoningContent = reasoningContent
 	}
 
 	var resp deepseekChatCompletionResponse
