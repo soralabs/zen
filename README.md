@@ -112,6 +112,7 @@ go run examples/twitter/main.go
 ```env
 DB_URL=postgresql://user:password@localhost:5432/zen
 OPENAI_API_KEY=your_openai_api_key
+DEEPSEEK_API_KEY=your_deepseek_api_key
 
 Platform-specific credentials as needed
 ```

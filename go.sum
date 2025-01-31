@@ -1,5 +1,9 @@
 entgo.io/ent v0.13.1 h1:uD8QwN1h6SNphdCCzmkMN3feSUzNnVvV/WIkHKMbzOE=
 entgo.io/ent v0.13.1/go.mod h1:qCEmo+biw3ccBn9OyL4ZK5dfpwg++l1Gxwac5B1206A=
+github.com/cohesion-org/deepseek-go v0.0.0-20250124222348-4ca343ea1bd4 h1:yuKgK1XXU3deMYiVCimjtlxHIP3etuSxV/fIq7QNSTo=
+github.com/cohesion-org/deepseek-go v0.0.0-20250124222348-4ca343ea1bd4/go.mod h1:je2+GYTRsFGimyZNP4hpAcARQ7dcMaidT5YisexH0w0=
+github.com/cohesion-org/deepseek-go v0.0.0-20250126155110-fdfb05803d7a h1:/ACWRQBuqEAPZV5edceU3bIViRNm8VYuOkkmjyLF3Mk=
+github.com/cohesion-org/deepseek-go v0.0.0-20250126155110-fdfb05803d7a/go.mod h1:je2+GYTRsFGimyZNP4hpAcARQ7dcMaidT5YisexH0w0=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
