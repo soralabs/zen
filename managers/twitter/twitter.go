@@ -57,14 +57,6 @@ func (tm *TwitterManager) GetDependencies() []manager.ManagerID {
 // 2. Decodes tweet metadata from the message
 // 3. Reconstructs and stores the conversation thread
 func (tm *TwitterManager) Process(state *state.State) error {
-	// Only process Twitter messages
-	// TODO: instead of doing custom data to see, maybe in the state, we can define what managers to process
-	// and what managers to post process
-	platform, ok := state.GetCustomData("platform")
-	if !ok || platform != "twitter" {
-		return nil
-	}
-
 	tm.Logger.Infof("Executing twitter analysis")
 
 	var metadata twitter.ParsedTweet
@@ -89,12 +81,6 @@ func (tm *TwitterManager) Process(state *state.State) error {
 // 3. Determining appropriate actions (tweet, like, etc.)
 // 4. Executing the decided actions
 func (tm *TwitterManager) PostProcess(state *state.State) error {
-	// Only process Twitter actions
-	platform, ok := state.GetCustomData("platform")
-	if !ok || platform != "twitter" {
-		return nil
-	}
-
 	tm.Logger.Infof("Executing twitter action")
 
 	response := state.Output
