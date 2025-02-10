@@ -14,7 +14,6 @@ import (
 
 	"github.com/pgvector/pgvector-go"
 	toolkit "github.com/soralabs/toolkit/go"
-	"golang.org/x/sync/errgroup"
 )
 
 // New creates a new Engine instance with the provided options.
@@ -46,6 +45,15 @@ func (e *Engine) Process(currentState *state.State) error {
 	return e.ProcessWithFilter(currentState, allMgrs)
 }
 
+// ProcessWithFilter handles the processing of a new input through the runtime pipeline
+// but only executes the managers whose IDs are in the provided managerFilter slice.
+func (e *Engine) ProcessWithFilter(currentState *state.State, managerFilter []manager.ManagerID) error {
+	return e.NewProcessBuilder().
+		WithState(currentState).
+		WithManagerFilter(managerFilter).
+		Execute()
+}
+
 // PostProcess handles the post-processing of a response:
 // 1. Retrieves actor and session information
 // 2. Creates a copy of the response fragment
@@ -58,6 +66,15 @@ func (e *Engine) PostProcess(response *db.Fragment, currentState *state.State) e
 		allMgrs = append(allMgrs, m.GetID())
 	}
 	return e.PostProcessWithFilter(response, currentState, allMgrs)
+}
+
+// PostProcessWithFilter handles the post-processing of a response but only executes the managers specified in managerFilter.
+func (e *Engine) PostProcessWithFilter(response *db.Fragment, currentState *state.State, managerFilter []manager.ManagerID) error {
+	return e.NewPostProcessBuilder().
+		WithState(currentState).
+		WithResponse(response).
+		WithManagerFilter(managerFilter).
+		Execute()
 }
 
 // GenerateResponse creates a new response using the LLM:
@@ -171,129 +188,6 @@ func (e *Engine) executeManagersInOrder(currentState *state.State, executeFn fun
 				return fmt.Errorf("manager %s failed: %w", managerID, err)
 			}
 		}
-	}
-
-	return nil
-}
-
-// ProcessWithFilter handles the processing of a new input through the runtime pipeline
-// but only executes the managers whose IDs are in the provided managerFilter slice.
-func (e *Engine) ProcessWithFilter(currentState *state.State, managerFilter []manager.ManagerID) error {
-	input := currentState.Input
-	e.logger.WithFields(map[string]interface{}{
-		"input":         input.ID,
-		"managerFilter": managerFilter,
-	}).Info("Processing input with manager filter")
-
-	actor, err := e.actorStore.GetByID(input.ActorID)
-	if err != nil {
-		return fmt.Errorf("failed to get actor: %w", err)
-	}
-
-	session, err := e.sessionStore.GetByID(input.SessionID)
-	if err != nil {
-		return fmt.Errorf("failed to get session: %w", err)
-	}
-
-	// Create a copy of the input fragment for storage
-	inputCopy := &db.Fragment{
-		ID:        input.ID,
-		ActorID:   input.ActorID,
-		SessionID: input.SessionID,
-		Content:   input.Content,
-		Metadata:  input.Metadata,
-		Embedding: input.Embedding,
-		Actor:     actor,
-		Session:   session,
-		CreatedAt: input.CreatedAt,
-	}
-	if inputCopy.CreatedAt.IsZero() {
-		inputCopy.CreatedAt = time.Now()
-	}
-
-	currentState.Input = inputCopy
-
-	var errGroup errgroup.Group
-	for _, m := range e.managers {
-		if e.containsManager(managerFilter, m.GetID()) {
-			mCopy := m // capture variable for closure
-			errGroup.Go(func() error {
-				return mCopy.Process(currentState)
-			})
-		}
-	}
-
-	if err := errGroup.Wait(); err != nil {
-		return fmt.Errorf("failed to execute manager processes: %w", err)
-	}
-
-	if err := e.interactionFragmentStore.Upsert(inputCopy); err != nil {
-		return fmt.Errorf("failed to store input: %w", err)
-	}
-
-	return nil
-}
-
-// PostProcessWithFilter handles the post-processing of a response but only executes the managers specified in managerFilter.
-func (e *Engine) PostProcessWithFilter(response *db.Fragment, currentState *state.State, managerFilter []manager.ManagerID) error {
-	actor, err := e.actorStore.GetByID(response.ActorID)
-	if err != nil {
-		return fmt.Errorf("failed to get actor: %w", err)
-	}
-
-	session, err := e.sessionStore.GetByID(response.SessionID)
-	if err != nil {
-		return fmt.Errorf("failed to get session: %w", err)
-	}
-
-	responseCopy := &db.Fragment{
-		ID:        response.ID,
-		ActorID:   response.ActorID,
-		SessionID: response.SessionID,
-		Content:   response.Content,
-		Metadata:  response.Metadata,
-		Embedding: response.Embedding,
-		Actor:     actor,
-		Session:   session,
-		CreatedAt: response.CreatedAt,
-	}
-	if responseCopy.CreatedAt.IsZero() {
-		responseCopy.CreatedAt = time.Now()
-	}
-
-	currentState.Output = responseCopy
-
-	// Execute managers in order, only for those specified in the managerFilter
-	var filteredOrder []manager.ManagerID
-	if len(e.managerOrder) > 0 {
-		for _, mid := range e.managerOrder {
-			if e.containsManager(managerFilter, mid) {
-				filteredOrder = append(filteredOrder, mid)
-			}
-		}
-	} else {
-		for _, m := range e.managers {
-			if e.containsManager(managerFilter, m.GetID()) {
-				filteredOrder = append(filteredOrder, m.GetID())
-			}
-		}
-	}
-
-	managerMap := make(map[manager.ManagerID]manager.Manager)
-	for _, m := range e.managers {
-		managerMap[m.GetID()] = m
-	}
-
-	for _, mid := range filteredOrder {
-		if m, exists := managerMap[mid]; exists {
-			if err := m.PostProcess(currentState); err != nil {
-				return fmt.Errorf("manager %s failed: %w", mid, err)
-			}
-		}
-	}
-
-	if err := e.interactionFragmentStore.Upsert(response); err != nil {
-		return fmt.Errorf("failed to store response: %w", err)
 	}
 
 	return nil
