@@ -42,15 +42,8 @@ func (e *Engine) Process(currentState *state.State) error {
 	for _, m := range e.managers {
 		allMgrs = append(allMgrs, m.GetID())
 	}
-	return e.ProcessWithFilter(currentState, allMgrs)
-}
-
-// ProcessWithFilter handles the processing of a new input through the runtime pipeline
-// but only executes the managers whose IDs are in the provided managerFilter slice.
-func (e *Engine) ProcessWithFilter(currentState *state.State, managerFilter []manager.ManagerID) error {
 	return e.NewProcessBuilder().
 		WithState(currentState).
-		WithManagerFilter(managerFilter).
 		Execute()
 }
 
@@ -65,15 +58,10 @@ func (e *Engine) PostProcess(response *db.Fragment, currentState *state.State) e
 	for _, m := range e.managers {
 		allMgrs = append(allMgrs, m.GetID())
 	}
-	return e.PostProcessWithFilter(response, currentState, allMgrs)
-}
 
-// PostProcessWithFilter handles the post-processing of a response but only executes the managers specified in managerFilter.
-func (e *Engine) PostProcessWithFilter(response *db.Fragment, currentState *state.State, managerFilter []manager.ManagerID) error {
 	return e.NewPostProcessBuilder().
 		WithState(currentState).
 		WithResponse(response).
-		WithManagerFilter(managerFilter).
 		Execute()
 }
 

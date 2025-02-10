@@ -37,19 +37,29 @@ type PostProcessBuilder struct {
 
 // NewProcessBuilder starts building a process operation
 func (e *Engine) NewProcessBuilder() *ProcessBuilder {
+	managerFilter := make([]manager.ManagerID, 0, len(e.managers))
+	for _, m := range e.managers {
+		managerFilter = append(managerFilter, m.GetID())
+	}
 	return &ProcessBuilder{
-		engine:      e,
-		shouldStore: true, // Default to storing
-		metadata:    make(map[string]interface{}),
+		engine:        e,
+		shouldStore:   true, // Default to storing
+		metadata:      make(map[string]interface{}),
+		managerFilter: managerFilter,
 	}
 }
 
 // NewPostProcessBuilder starts building a post-process operation
 func (e *Engine) NewPostProcessBuilder() *PostProcessBuilder {
+	managerFilter := make([]manager.ManagerID, 0, len(e.managers))
+	for _, m := range e.managers {
+		managerFilter = append(managerFilter, m.GetID())
+	}
 	return &PostProcessBuilder{
-		engine:      e,
-		shouldStore: true, // Default to storing
-		metadata:    make(map[string]interface{}),
+		engine:        e,
+		shouldStore:   true, // Default to storing
+		metadata:      make(map[string]interface{}),
+		managerFilter: managerFilter,
 	}
 }
 
@@ -188,10 +198,21 @@ func (b *ProcessBuilder) Execute() error {
 	// Use custom manager order if specified, otherwise use engine's order
 	var executionOrder []manager.ManagerID
 	if len(b.managerOrder) > 0 {
-		executionOrder = b.managerOrder
+		// Filter the custom order by the manager filter
+		for _, mid := range b.managerOrder {
+			if b.engine.containsManager(b.managerFilter, mid) {
+				executionOrder = append(executionOrder, mid)
+			}
+		}
 	} else if len(b.engine.managerOrder) > 0 {
-		executionOrder = b.engine.managerOrder
+		// Filter the engine's order by the manager filter
+		for _, mid := range b.engine.managerOrder {
+			if b.engine.containsManager(b.managerFilter, mid) {
+				executionOrder = append(executionOrder, mid)
+			}
+		}
 	} else {
+		// Use all managers in the filter
 		for _, m := range b.engine.managers {
 			if b.engine.containsManager(b.managerFilter, m.GetID()) {
 				executionOrder = append(executionOrder, m.GetID())
@@ -364,10 +385,21 @@ func (b *PostProcessBuilder) Execute() error {
 	// Use custom manager order if specified, otherwise use engine's order
 	var executionOrder []manager.ManagerID
 	if len(b.managerOrder) > 0 {
-		executionOrder = b.managerOrder
+		// Filter the custom order by the manager filter
+		for _, mid := range b.managerOrder {
+			if b.engine.containsManager(b.managerFilter, mid) {
+				executionOrder = append(executionOrder, mid)
+			}
+		}
 	} else if len(b.engine.managerOrder) > 0 {
-		executionOrder = b.engine.managerOrder
+		// Filter the engine's order by the manager filter
+		for _, mid := range b.engine.managerOrder {
+			if b.engine.containsManager(b.managerFilter, mid) {
+				executionOrder = append(executionOrder, mid)
+			}
+		}
 	} else {
+		// Use all managers in the filter
 		for _, m := range b.engine.managers {
 			if b.engine.containsManager(b.managerFilter, m.GetID()) {
 				executionOrder = append(executionOrder, m.GetID())
