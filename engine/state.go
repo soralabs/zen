@@ -11,18 +11,44 @@ import (
 	"github.com/pgvector/pgvector-go"
 )
 
+type StateOptions struct {
+	recentInteractionLimit   int
+	relevantInteractionLimit int
+}
+
+type StateOption func(*StateOptions)
+
+func WithRecentInteractionLimit(limit int) StateOption {
+	return func(o *StateOptions) {
+		o.recentInteractionLimit = limit
+	}
+}
+
+func WithRelevantInteractionLimit(limit int) StateOption {
+	return func(o *StateOptions) {
+		o.relevantInteractionLimit = limit
+	}
+}
+
+func defaultStateOptions() *StateOptions {
+	return &StateOptions{
+		recentInteractionLimit:   20,
+		relevantInteractionLimit: 20,
+	}
+}
+
 // NewState creates a new State instance with the provided options.
 // It initializes an empty state and applies any provided configuration options.
-func (e *Engine) NewStateFromFragment(fragment *db.Fragment) (*state.State, error) {
+func (e *Engine) NewStateFromFragment(fragment *db.Fragment, opts ...StateOption) (*state.State, error) {
 	state := state.NewState()
 	state.Input = fragment
-	if err := e.UpdateState(state); err != nil {
+	if err := e.UpdateState(state, opts...); err != nil {
 		return nil, fmt.Errorf("failed to create state: %w", err)
 	}
 	return state, nil
 }
 
-func (e *Engine) NewState(actorId, sessionId id.ID, input string) (*state.State, error) {
+func (e *Engine) NewState(actorId, sessionId id.ID, input string, opts ...StateOption) (*state.State, error) {
 	embedding, err := e.llmClient.EmbedText(input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to embed text: %w", err)
@@ -40,7 +66,7 @@ func (e *Engine) NewState(actorId, sessionId id.ID, input string) (*state.State,
 		UpdatedAt: time.Now(),
 	}
 
-	if err := e.UpdateState(state); err != nil {
+	if err := e.UpdateState(state, opts...); err != nil {
 		return nil, fmt.Errorf("failed to create state: %w", err)
 	}
 
@@ -48,7 +74,12 @@ func (e *Engine) NewState(actorId, sessionId id.ID, input string) (*state.State,
 }
 
 // UpdateState applies the provided options and collects manager data
-func (e *Engine) UpdateState(s *state.State) error {
+func (e *Engine) UpdateState(s *state.State, opts ...StateOption) error {
+	options := defaultStateOptions()
+	for _, opt := range opts {
+		opt(options)
+	}
+
 	// Reset manager data for fresh update
 	// s.Reset()
 
@@ -69,12 +100,12 @@ func (e *Engine) UpdateState(s *state.State) error {
 	}
 
 	// Add recent interactions to state
-	recentInteractions, err := e.interactionFragmentStore.GetBySession(s.Input.SessionID, 20)
+	recentInteractions, err := e.interactionFragmentStore.GetBySession(s.Input.SessionID, options.recentInteractionLimit)
 	if err != nil {
 		return fmt.Errorf("failed to get recent interactions: %w", err)
 	}
 
-	relevantInteractions, err := e.interactionFragmentStore.SearchSimilar(s.Input.Embedding, s.Input.SessionID, 20)
+	relevantInteractions, err := e.interactionFragmentStore.SearchSimilar(s.Input.Embedding, s.Input.SessionID, options.relevantInteractionLimit)
 	if err != nil {
 		return fmt.Errorf("failed to get relevant interactions: %w", err)
 	}
