@@ -118,12 +118,12 @@ func (f *FragmentStore) SearchSimilar(embedding pgvector.Vector, sessionID id.ID
 	var fragments []db.Fragment
 	err := f.db.WithContext(f.ctx).
 		Table(string(f.fragmentTable)).
-		Joins("Actor").
-		Joins("Session").
-		Select("*, ("+string(f.fragmentTable)+".embedding <=> ?) as similarity", embedding).
+		Select("*, (embedding <=> ?) as similarity", embedding).
 		Where(string(f.fragmentTable)+".session_id = ?", sessionID).
 		Order("similarity").
 		Limit(limit).
+		Preload("Actor").
+		Preload("Session").
 		Find(&fragments).Error
 	return fragments, err
 }
@@ -243,9 +243,7 @@ func (f *FragmentStore) UpdateID(oldID id.ID, newID id.ID) error {
 
 func (f *FragmentStore) SearchByFilter(filter FragmentFilter) ([]db.Fragment, error) {
 	query := f.db.WithContext(f.ctx).
-		Table(string(f.fragmentTable)).
-		Joins("Actor").
-		Joins("Session")
+		Table(string(f.fragmentTable))
 
 	// Apply basic filters
 	if filter.ActorID != nil {
@@ -295,6 +293,9 @@ func (f *FragmentStore) SearchByFilter(filter FragmentFilter) ([]db.Fragment, er
 	if filter.Limit > 0 {
 		query = query.Limit(filter.Limit)
 	}
+
+	// Load relationships using preload
+	query = query.Preload("Actor").Preload("Session")
 
 	var fragments []db.Fragment
 	err := query.Find(&fragments).Error

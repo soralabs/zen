@@ -208,6 +208,7 @@ func (k *Twitter) create() error {
 			},
 		})),
 		engine.WithDB(k.database),
+		engine.WithLLMClient(k.llmClient),
 		engine.WithIdentifier(assistantID, assistantName),
 		engine.WithSessionStore(sessionStore),
 		engine.WithActorStore(actorStore),
