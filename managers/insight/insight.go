@@ -175,6 +175,13 @@ GUIDELINES:
 
 	// Store new insights and update embeddings
 	for _, insight := range result.NewInsights {
+		// Get actor information first
+		actor, err := im.ActorStore.GetByID(id.ID(insight.ActorID))
+		if err != nil {
+			im.Logger.Warnf("Failed to get actor for insight: %v", err)
+			continue
+		}
+
 		insightFragment := &db.Fragment{
 			ID:        id.New(),
 			ActorID:   id.ID(insight.ActorID),
@@ -187,6 +194,7 @@ GUIDELINES:
 				"source_context": insight.SourceContext,
 				"timestamp":      time.Now().Unix(),
 			},
+			Actor: actor, // Set the actor explicitly
 		}
 
 		// Generate embedding for semantic search
