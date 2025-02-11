@@ -245,12 +245,12 @@ func (f *FragmentStore) SearchByFilter(filter FragmentFilter) ([]db.Fragment, er
 	query := f.db.WithContext(f.ctx).
 		Table(string(f.fragmentTable))
 
-	// Apply basic filters
-	if filter.ActorID != nil {
-		query = query.Where(string(f.fragmentTable)+".actor_id = ?", *filter.ActorID)
-	}
 	if filter.SessionID != nil {
 		query = query.Where(string(f.fragmentTable)+".session_id = ?", *filter.SessionID)
+	}
+
+	if filter.ActorID != nil {
+		query = query.Where(string(f.fragmentTable)+".actor_id = ?", *filter.ActorID)
 	}
 
 	// Apply metadata filters
@@ -289,17 +289,51 @@ func (f *FragmentStore) SearchByFilter(filter FragmentFilter) ([]db.Fragment, er
 		query = query.Order(string(f.fragmentTable) + ".created_at DESC")
 	}
 
-	// Apply limit
+	// Apply limit if set
 	if filter.Limit > 0 {
 		query = query.Limit(filter.Limit)
 	}
 
-	// Load relationships using preload
+	// Preload associations
 	query = query.Preload("Actor").Preload("Session")
 
 	var fragments []db.Fragment
 	err := query.Find(&fragments).Error
-	return fragments, err
+	if err != nil {
+		return fragments, err
+	}
+
+	// Check for fragments with nil Actor and fetch missing actors
+	var missingIDs []id.ID
+	for _, frag := range fragments {
+		if frag.Actor == nil {
+			missingIDs = append(missingIDs, frag.ActorID)
+		}
+	}
+	if len(missingIDs) > 0 {
+		var actors []db.Actor
+		err := f.db.WithContext(f.ctx).Table("actors").Where("id in ?", missingIDs).Find(&actors).Error
+		if err == nil {
+			actorMap := make(map[id.ID]*db.Actor)
+			for i, act := range actors {
+				actorMap[act.ID] = &actors[i]
+			}
+			for i, frag := range fragments {
+				if frag.Actor == nil {
+					fragments[i].Actor = actorMap[frag.ActorID]
+				}
+			}
+		}
+	}
+
+	// Now post-filter fragments based on ActorID
+	var filtered []db.Fragment
+	for _, frag := range fragments {
+		if frag.Actor != nil {
+			filtered = append(filtered, frag)
+		}
+	}
+	return filtered, nil
 }
 
 func (f *FragmentStore) GetRecentSessionsByActor(actorID id.ID, limit int) ([]id.ID, error) {
