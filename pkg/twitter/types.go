@@ -1084,3 +1084,97 @@ type FavoriteTweetResponse struct {
 		FavoriteTweet string `json:"favorite_tweet,omitempty"`
 	} `json:"data,omitempty"`
 }
+
+type GetUserDetailsResponse struct {
+	Data struct {
+		User struct {
+			Result struct {
+				Typename                   string `json:"__typename"`
+				ID                         string `json:"id"`
+				RestID                     string `json:"rest_id"`
+				AffiliatesHighlightedLabel struct {
+				} `json:"affiliates_highlighted_label"`
+				HasGraduatedAccess       bool   `json:"has_graduated_access"`
+				ParodyCommentaryFanLabel string `json:"parody_commentary_fan_label"`
+				IsBlueVerified           bool   `json:"is_blue_verified"`
+				ProfileImageShape        string `json:"profile_image_shape"`
+				Legacy                   struct {
+					Following           bool   `json:"following"`
+					CanDm               bool   `json:"can_dm"`
+					CanMediaTag         bool   `json:"can_media_tag"`
+					CreatedAt           string `json:"created_at"`
+					DefaultProfile      bool   `json:"default_profile"`
+					DefaultProfileImage bool   `json:"default_profile_image"`
+					Description         string `json:"description"`
+					Entities            struct {
+						Description struct {
+							Urls []any `json:"urls"`
+						} `json:"description"`
+					} `json:"entities"`
+					FastFollowersCount      int    `json:"fast_followers_count"`
+					FavouritesCount         int    `json:"favourites_count"`
+					FollowersCount          int    `json:"followers_count"`
+					FriendsCount            int    `json:"friends_count"`
+					HasCustomTimelines      bool   `json:"has_custom_timelines"`
+					IsTranslator            bool   `json:"is_translator"`
+					ListedCount             int    `json:"listed_count"`
+					Location                string `json:"location"`
+					MediaCount              int    `json:"media_count"`
+					Name                    string `json:"name"`
+					NeedsPhoneVerification  bool   `json:"needs_phone_verification"`
+					NormalFollowersCount    int    `json:"normal_followers_count"`
+					PinnedTweetIdsStr       []any  `json:"pinned_tweet_ids_str"`
+					PossiblySensitive       bool   `json:"possibly_sensitive"`
+					ProfileBannerURL        string `json:"profile_banner_url"`
+					ProfileImageURLHTTPS    string `json:"profile_image_url_https"`
+					ProfileInterstitialType string `json:"profile_interstitial_type"`
+					ScreenName              string `json:"screen_name"`
+					StatusesCount           int    `json:"statuses_count"`
+					TranslatorType          string `json:"translator_type"`
+					Verified                bool   `json:"verified"`
+					WantRetweets            bool   `json:"want_retweets"`
+					WithheldInCountries     []any  `json:"withheld_in_countries"`
+				} `json:"legacy"`
+				TipjarSettings struct {
+				} `json:"tipjar_settings"`
+				LegacyExtendedProfile struct {
+					Birthdate struct {
+						Day            int    `json:"day"`
+						Month          int    `json:"month"`
+						Year           int    `json:"year"`
+						Visibility     string `json:"visibility"`
+						YearVisibility string `json:"year_visibility"`
+					} `json:"birthdate"`
+				} `json:"legacy_extended_profile"`
+				IsProfileTranslatable           bool `json:"is_profile_translatable"`
+				HasHiddenSubscriptionsOnProfile bool `json:"has_hidden_subscriptions_on_profile"`
+				VerificationInfo                struct {
+					IsIdentityVerified bool `json:"is_identity_verified"`
+					Reason             struct {
+						Description struct {
+							Text     string `json:"text"`
+							Entities []struct {
+								FromIndex int `json:"from_index"`
+								ToIndex   int `json:"to_index"`
+								Ref       struct {
+									URL     string `json:"url"`
+									URLType string `json:"url_type"`
+								} `json:"ref"`
+							} `json:"entities"`
+						} `json:"description"`
+						VerifiedSinceMsec string `json:"verified_since_msec"`
+					} `json:"reason"`
+				} `json:"verification_info"`
+				HighlightsInfo struct {
+					CanHighlightTweets bool   `json:"can_highlight_tweets"`
+					HighlightedTweets  string `json:"highlighted_tweets"`
+				} `json:"highlights_info"`
+				UserSeedTweetCount     int  `json:"user_seed_tweet_count"`
+				PremiumGiftingEligible bool `json:"premium_gifting_eligible"`
+				BusinessAccount        struct {
+				} `json:"business_account"`
+				CreatorSubscriptionsCount int `json:"creator_subscriptions_count"`
+			} `json:"result"`
+		} `json:"user"`
+	} `json:"data"`
+}

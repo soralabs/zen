@@ -345,6 +345,73 @@ func (c *Client) FavoriteTweet(tweetID string) error {
 	return nil
 }
 
+func (c *Client) GetUserDetails(username string) (*GetUserDetailsResponse, error) {
+	variables := map[string]interface{}{
+		"screen_name": username,
+	}
+
+	features := map[string]interface{}{
+		"hidden_profile_subscriptions_enabled":                              true,
+		"profile_label_improvements_pcf_label_in_post_enabled":              true,
+		"rweb_tipjar_consumption_enabled":                                   true,
+		"responsive_web_graphql_exclude_directive_enabled":                  true,
+		"verified_phone_label_enabled":                                      false,
+		"subscriptions_verification_info_is_identity_verified_enabled":      true,
+		"subscriptions_verification_info_verified_since_enabled":            true,
+		"highlights_tweets_tab_ui_enabled":                                  true,
+		"responsive_web_twitter_article_notes_tab_enabled":                  true,
+		"subscriptions_feature_can_gift_premium":                            true,
+		"creator_subscriptions_tweet_preview_api_enabled":                   true,
+		"responsive_web_graphql_skip_user_profile_image_extensions_enabled": false,
+		"responsive_web_graphql_timeline_navigation_enabled":                true,
+	}
+
+	fieldToggles := map[string]interface{}{
+		"withAuxiliaryUserLabels": false,
+	}
+
+	data, _ := json.Marshal(variables)
+	featuresData, _ := json.Marshal(features)
+	fieldTogglesData, _ := json.Marshal(fieldToggles)
+
+	res, err := resty.New().R().
+		SetHeaders(map[string]string{
+			"authorization":             "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
+			"x-csrf-token":              c.twitterCredential.CT0,
+			"x-twitter-client-language": "en",
+			"x-twitter-active-user":     "yes",
+			"x-twitter-auth-type":       "OAuth2Session",
+			"user-agent":                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+			"content-type":              "application/json",
+			"accept":                    "*/*",
+			"referer":                   fmt.Sprintf("https://x.com/%s", username),
+		}).
+		SetContext(c.ctx).
+		SetQueryParams(map[string]string{
+			"variables":    string(data),
+			"features":     string(featuresData),
+			"fieldToggles": string(fieldTogglesData),
+		}).
+		SetCookies([]*http.Cookie{
+			{Name: "ct0", Value: c.twitterCredential.CT0},
+			{Name: "auth_token", Value: c.twitterCredential.AuthToken},
+		}).
+		Get("https://x.com/i/api/graphql/32pL5BWe9WKeSK1MoPvFQQ/UserByScreenName")
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode() != 200 {
+		return nil, fmt.Errorf("failed to get user details: %s", res.String())
+	}
+
+	var response GetUserDetailsResponse
+	if err := json.Unmarshal(res.Body(), &response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
 // SearchReplies searches for replies to the specified user
 func (c *Client) SearchReplies(username string, limit int) (*SearchTimelineResponse, error) {
 	variables := map[string]interface{}{
