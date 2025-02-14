@@ -2,8 +2,41 @@ package personality
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 )
+
+// randomSelect returns n random items from the input slice
+// If n is greater than the length of the slice, returns all items in random order
+func randomSelect(items []string, n int) []string {
+	if n >= len(items) {
+		// Create a copy to avoid modifying the original slice
+		result := make([]string, len(items))
+		copy(result, items)
+		rand.Shuffle(len(result), func(i, j int) {
+			result[i], result[j] = result[j], result[i]
+		})
+		return result
+	}
+
+	// Create an index slice
+	indices := make([]int, len(items))
+	for i := range indices {
+		indices[i] = i
+	}
+
+	// Shuffle indices
+	rand.Shuffle(len(indices), func(i, j int) {
+		indices[i], indices[j] = indices[j], indices[i]
+	})
+
+	// Select first n items using shuffled indices
+	result := make([]string, n)
+	for i := 0; i < n; i++ {
+		result[i] = items[indices[i]]
+	}
+	return result
+}
 
 // formatPersonality converts a Personality struct into a formatted string
 // suitable for inclusion in prompt templates
@@ -40,16 +73,16 @@ func formatPersonality(p *Personality) string {
 	// Core identity
 	b.WriteString(fmt.Sprintf("- You are %s. %s\n\n", p.Name, p.Description))
 
-	// Communication style
+	// Communication style - randomly select 5
 	b.WriteString("# Communication Style\n")
-	for _, style := range p.Style {
+	for _, style := range randomSelect(p.Style, 5) {
 		b.WriteString(fmt.Sprintf("- %s\n", style))
 	}
 	b.WriteString("\n")
 
-	// Core traits and behaviors
+	// Core traits and behaviors - randomly select 5
 	b.WriteString("# Core Traits\n")
-	for _, trait := range p.Traits {
+	for _, trait := range randomSelect(p.Traits, 5) {
 		b.WriteString(fmt.Sprintf("- %s\n", trait))
 	}
 	b.WriteString("\n")
